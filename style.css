@@ -1,0 +1,14 @@
+body {
+    display: flex;
+}
+
+.game {
+
+}
+
+.ui {
+    text-align: justify;
+    padding-left: 1%;
+    padding-right: 5%;
+    border-style: solid;
+}
