@@ -1,0 +1,19 @@
+General:
+    Put PIXI initialization into its own file, call methods form main.
+    Separate simulation and rendering. Create separate ticker for simulation.
+    Make input system work with simulation, do not update anything outside of sim ticks.
+    Use pseudo-header layout for files. (see ParticleDynamics.js)
+
+Particle Dynamics:
+
+
+Path Interpolation:
+
+
+Voronoi Fracture:
+
+
+Motion Blur:
+
+
+Gameplay:
