@@ -68,10 +68,10 @@ function main() {
             }
         };
 
-        state = play;
+        state = play; // TODO: move to simulation loop once created
         // TODO: Split into simulation and render
         app.ticker.add(delta => gameLoop(delta / 60)); // Divide by 60 to get per second values
-        app.ticker.maxFPS = 10; // For testing particle stuff
+        app.ticker.maxFPS = 60; // Hardcoded for now, move to UI controls
 
         const power = 20;
         const size = 100;
