@@ -1,14 +1,17 @@
 General:
-    Put PIXI initialization into its own file, call methods form main.
+    Put PIXI initialization into its own file, call methods from main.
+        Keyboard, Canvas initialization in its own class/file (game.js)
     Separate simulation and rendering. Create separate ticker for simulation.
     Make input system work with simulation, do not update anything outside of sim ticks.
+        "Play" logic in simulation ticker.
     Use pseudo-header layout for files. (see ParticleDynamics.js)
+        For publicly accessible stuff (effects/animations), autocompletion, not publicly accessible stuff starts with "_"
 
 Particle Dynamics:
 
 
 Path Interpolation:
-
+    Vortex/enemies follow path interpolation.
 
 Voronoi Fracture:
 
