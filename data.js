@@ -4,6 +4,8 @@ class Particle {
         this.vel = new Vector2(0, 0);
         this.force = new Vector2(0, 0);
         this.mass = mass;
+        // For field lines only
+        this.lastFrameForce = new Vector2(0, 0);
     }
 
     clearForce()
@@ -11,8 +13,28 @@ class Particle {
         this.force.x = 0;
         this.force.y = 0;
     }
+
+    applyChanges(changes, multiplier)
+    {
+        this.pos.x += changes.posX * multiplier;
+        this.pos.y += changes.posY * multiplier;
+        this.vel.x += changes.velX * multiplier;
+        this.vel.y += changes.velY * multiplier;
+    }
+
+    clone()
+    {
+        let c = new Particle(this.pos.x, this.pos.y, this.mass);
+        c.vel.x = this.vel.x;
+        c.vel.y = this.vel.y;
+        c.force.x = this.force.x;
+        c.force.y = this.force.y;
+        return c;
+    }
 }
 
+Lines = {}
+Lines.lengthMult = 1;
 class FieldLine extends PIXI.Graphics {
     constructor(x, y) {
         super()
@@ -34,7 +56,7 @@ class FieldLine extends PIXI.Graphics {
         this.clear();
         this.lineStyle({width: 3, color: 0x000000});
         this.moveTo(this.posX, this.posY);
-        this.lineTo(this.posX + this.particle.force.x, this.posY + this.particle.force.y);
+        this.lineTo(this.posX + this.particle.vel.x * Lines.lengthMult / delta, this.posY + this.particle.vel.y * Lines.lengthMult / delta);
     }
 }
 
@@ -93,6 +115,12 @@ class Vector2 {
         this.x *= other.x;
         this.y *= other.y;
     }
+
+    scalarDivide(scalar)
+    {
+        this.x /= scalar;
+        this.y /= scalar;
+    }
 }
 
 class ConstantForce {
@@ -103,8 +131,8 @@ class ConstantForce {
 
     apply(particle)
     {
-        particle.force.x += this.x;
-        particle.force.y += this.y;
+        particle.force.x += this.x / particle.mass;
+        particle.force.y += this.y / particle.mass;
     }
 }
 
@@ -121,8 +149,8 @@ class RadialForce {
         let distance = dir.magnitude();
         dir.normalize();
         let force = Math.min(this.power / Math.pow(distance / this.size, 2), this.power);
-        particle.force.x += dir.x * force
-        particle.force.y += dir.y * force;
+        particle.force.x += dir.x * force / particle.mass;
+        particle.force.y += dir.y * force / particle.mass;
     }
 }
 

@@ -89,8 +89,8 @@ function main() {
         //ParticleDynamics.Forces.push(new ConstantForce(5, 7));
         ParticleDynamics.Forces.push(new DragForce(0.1));
 
-        let xGrid = 41;
-        let yGrid = 41;
+        let xGrid = 50;
+        let yGrid = 50;
         for(let x = xGrid; x < width; x += xGrid)
         {
             for(let y = yGrid; y < height; y += yGrid)
@@ -141,7 +141,7 @@ function main() {
             {
                 force.center.y -= height;
             }
-        })
+        })//*/
     }
 
     // https://github.com/kittykatattack/learningPixi#introduction
