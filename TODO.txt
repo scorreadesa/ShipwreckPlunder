@@ -1,14 +1,16 @@
 General:
-    Put PIXI initialization into its own file, call methods from main.
-        Keyboard, Canvas initialization in its own class/file (game.js)
-    Separate simulation and rendering. Create separate ticker for simulation.
+    Put PIXI initialization into its own file, call methods from main. (done, kinda. Moved most logic to game.js into better-structured functions)
+        Keyboard, Canvas initialization in its own class/file (game.js) (game.js now has all game logic)
+    Separate simulation and rendering. Create separate ticker for simulation. (done, but ticker didn't work so I had to use setInterval)
     Make input system work with simulation, do not update anything outside of sim ticks.
         "Play" logic in simulation ticker.
     Use pseudo-header layout for files. (see ParticleDynamics.js)
         For publicly accessible stuff (effects/animations), autocompletion, not publicly accessible stuff starts with "_"
+    Add UI Controls for debug features and FPS/TPS stuff.
 
 Particle Dynamics:
-
+    Test with actual moving objects.
+    Add object trail debug option.
 
 Path Interpolation:
     Vortex/enemies follow path interpolation.
