@@ -11,6 +11,7 @@ General:
 Particle Dynamics:
     Test with actual moving objects.
     Add object trail debug option.
+    Registering/unregistering of particles.
 
 Path Interpolation:
     Vortex/enemies follow path interpolation.
@@ -22,3 +23,7 @@ Motion Blur:
 
 
 Gameplay:
+
+
+Polish:
+    Improve look of side panel with CSS magic.

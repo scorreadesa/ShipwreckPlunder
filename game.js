@@ -5,9 +5,10 @@ Game.height = 800;
 Game.player = undefined;
 Game.playerSpeed = 5;
 Game.simulationTPS = 60;
+Game.renderFPS = 60;
 Game.simulationInterval = undefined;
 Game.lastTimestamp = -1;
-Game.useStableDeltas = false; // If false uses exact high-res clock to calculate deltas, if true uses 1/TPS. Eliminates debug line flickering if enabled.
+Game.useStableDeltas = true; // If false uses exact high-res clock to calculate deltas, if true uses 1/TPS. Eliminates debug line flickering if enabled.
 
 Game.Inputs = {}
 Game.Inputs.Left = undefined;
@@ -21,9 +22,12 @@ Game.Motion = [];
 
 Game.Init = Init;
 Game.SetSimulationTPS = SetSimulationTPS;
+Game.SetRenderFPS = SetRenderFPS;
+Game.SetStableDeltas = SetStableDeltas;
 
 function Init()
 {
+    UI.Init();
     LoadAssets();
     ParticleDynamics.Init();
 }
@@ -32,7 +36,7 @@ function LoadAssets()
 {
     const loader = PIXI.Loader.shared;
     Game.PIXIApp = new PIXI.Application({width: Game.width, height: Game.height, backgroundColor: 0x1099bb});
-    document.body.appendChild(Game.PIXIApp.view); // TODO: Once window decoration is here, attach in a way that fits
+    UI.Elements.game.appendChild(Game.PIXIApp.view); // TODO: Once window decoration is here, attach in a way that fits
 
     let sprites = {};
     loader.add("player", "assets/bunny.png");
@@ -95,7 +99,7 @@ function Setup()
     };
 
     Game.PIXIApp.ticker.minFPS = 0;
-    Game.PIXIApp.ticker.maxFPS = 60; // Hardcoded for now, move to UI controls
+    Game.PIXIApp.ticker.maxFPS = Game.renderFPS;
 
     const power = 20;
     const size = 100;
@@ -112,7 +116,6 @@ function Setup()
 
     ParticleDynamics.Forces.push(new DragForce(0.1));
 
-    ParticleDynamics.EnableForceLines(); // TODO: Add UI controls
     Game.SetSimulationTPS(Game.simulationTPS);
 }
 
@@ -129,7 +132,7 @@ function Tick()
     }
     Game.lastTimestamp = window.performance.now();
 
-    InterfaceUpdate(delta);
+    UI.UpdateInterface();
     SimulationUpdate(delta);
 }
 
@@ -164,12 +167,6 @@ function SimulationUpdate(delta)
     ParticleDynamics.UpdateDebug(delta);
 }
 
-function InterfaceUpdate(delta)
-{
-    document.getElementById("renderfps").innerText = "Rendering: " + Math.round(Game.PIXIApp.ticker.FPS).toString() + "fps";
-    document.getElementById("simulationfps").innerText = "Simulation: " + Math.round(Game.simulationTPS).toString() + "fps";
-}
-
 function SetSimulationTPS(tps)
 {
     if(Game.simulationInterval !== undefined)
@@ -179,6 +176,21 @@ function SetSimulationTPS(tps)
     let millis = 1000 / tps;
     Game.simulationInterval = setInterval(Tick, millis);
     Game.simulationTPS = tps;
+}
+
+function SetStableDeltas(stable)
+{
+    Game.useStableDeltas = stable;
+    if(stable)
+    {
+        Game.lastTimestamp = -1; // Reset to -1 to prevent large jumps when switching back
+    }
+}
+
+function SetRenderFPS(fps)
+{
+    Game.renderFPS = fps;
+    Game.PIXIApp.ticker.maxFPS = fps;
 }
 
 // https://github.com/kittykatattack/learningPixi#introduction

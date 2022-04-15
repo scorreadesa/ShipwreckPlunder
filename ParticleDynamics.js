@@ -4,6 +4,7 @@ ParticleDynamics.DebugLines = [];
 ParticleDynamics.h = 1 / 180;
 ParticleDynamics.eulerSolver = true;
 ParticleDynamics.debugLinesEnabled = false;
+ParticleDynamics.debugPathsEnabled = false;
 ParticleDynamics.debugLinesLengthMult = 1;
 
 ParticleDynamics.Init = Init;
