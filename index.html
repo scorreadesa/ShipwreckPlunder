@@ -36,6 +36,10 @@
             <button type="button" onclick="UI.ApplyH()">Apply</button>
         </div>
         <div class="sidebar-entry">
+            <label for="euler">Use Euler Solver: </label>
+            <input id="euler" type="checkbox" onchange="UI.ApplyEuler()">
+        </div>
+        <div class="sidebar-entry">
             <label for="lines">Force Lines: </label>
             <input id="lines" type="checkbox" onchange="UI.ApplyForceLines()">
         </div>

@@ -2,7 +2,7 @@ ParticleDynamics = {};
 ParticleDynamics.Forces = [];
 ParticleDynamics.DebugLines = [];
 ParticleDynamics.h = 1 / 180;
-ParticleDynamics.eulerSolver = true;
+ParticleDynamics.eulerSolver = false;
 ParticleDynamics.debugLinesEnabled = false;
 ParticleDynamics.debugPathsEnabled = false;
 ParticleDynamics.debugLinesLengthMult = 1;
@@ -19,10 +19,11 @@ function Init()
 }
 
 function UpdateParticle(particle, delta) {
+    let cappedH = Math.min(delta, ParticleDynamics.h); // Is this correct? It feels correct, but is it?
     if (ParticleDynamics.eulerSolver) {
-        Euler(particle, delta, ParticleDynamics.h);
+        Euler(particle, delta, cappedH);
     } else {
-        RungeKutta(particle, delta, ParticleDynamics.h)
+        RungeKutta(particle, delta, cappedH)
     }
 }
 

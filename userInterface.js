@@ -5,6 +5,7 @@ UI.ApplyTPS = ApplyTPS;
 UI.ApplyFPS = ApplyFPS;
 UI.ApplyDeltas = ApplyDeltas;
 UI.ApplyH = ApplyH;
+UI.ApplyEuler = ApplyEuler;
 UI.ApplyForceLines = ApplyForceLines;
 UI.ApplyPaths = ApplyPaths;
 
@@ -17,6 +18,7 @@ function Init()
     UI.Elements.fps = document.getElementById("fps");
     UI.Elements.deltas = document.getElementById("deltas");
     UI.Elements.hValue = document.getElementById("hValue");
+    UI.Elements.euler = document.getElementById("euler");
     UI.Elements.lines = document.getElementById("lines");
     UI.Elements.paths = document.getElementById("paths");
 
@@ -24,6 +26,7 @@ function Init()
     UI.Elements.fps.value = Game.renderFPS;
     UI.Elements.deltas.checked = Game.useStableDeltas;
     UI.Elements.hValue.value = ParticleDynamics.h;
+    UI.Elements.euler.checked = ParticleDynamics.eulerSolver;
     UI.Elements.lines.checked = ParticleDynamics.debugLinesEnabled;
     UI.Elements.paths.checked = ParticleDynamics.debugPathsEnabled;
 }
@@ -55,6 +58,11 @@ function ApplyDeltas()
 function ApplyH()
 {
     ParticleDynamics.h = parseFloat(UI.Elements.hValue.value);
+}
+
+function ApplyEuler()
+{
+    ParticleDynamics.eulerSolver = UI.Elements.euler.checked;
 }
 
 function ApplyForceLines()
