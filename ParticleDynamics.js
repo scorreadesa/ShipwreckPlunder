@@ -3,14 +3,15 @@ ParticleDynamics.Forces = [];
 ParticleDynamics.DebugLines = [];
 ParticleDynamics.h = 1 / 180;
 ParticleDynamics.eulerSolver = false;
-ParticleDynamics.debugLinesEnabled = false;
-ParticleDynamics.debugPathsEnabled = false;
+ParticleDynamics.debugLinesEnabled = true;
+ParticleDynamics.debugPathsEnabled = true;
 ParticleDynamics.debugLinesLengthMult = 1;
 
 ParticleDynamics.Init = Init;
 ParticleDynamics.UpdateDebug = UpdateDebug;
 ParticleDynamics.EnableForceLines = EnableForceLines;
 ParticleDynamics.DisableForceLines = DisableForceLines;
+ParticleDynamics.SetDebugPaths = SetDebugPaths;
 ParticleDynamics.UpdateParticle = UpdateParticle;
 
 function Init()
@@ -25,6 +26,7 @@ function UpdateParticle(particle, delta) {
     } else {
         RungeKutta(particle, delta, cappedH)
     }
+    particle.track(ParticleDynamics.debugPathsEnabled);
 }
 
 function Euler(particle, delta, h) {
@@ -110,6 +112,11 @@ function SetupDebug()
         }
     }//*/
 
+    if(ParticleDynamics.debugLinesEnabled)
+    {
+        EnableForceLines();
+    }
+
     /*let line = new FieldLine(200, 200);
     lines.push(line);
     app.stage.addChild(line);//*/
@@ -131,6 +138,11 @@ function DisableForceLines()
     ParticleDynamics.debugLinesEnabled = false;
 }
 
+function SetDebugPaths(paths)
+{
+    ParticleDynamics.debugPathsEnabled = paths;
+}
+
 function UpdateDebug(delta)
 {
     if(!ParticleDynamics.debugLinesEnabled)
@@ -147,13 +159,21 @@ function UpdateDebug(delta)
 // Classes
 
 class Particle {
-    constructor(posX, posY, mass) {
+    constructor(posX, posY, mass, tracked) {
         this.pos = new Vector2(posX, posY);
         this.vel = new Vector2(0, 0);
         this.force = new Vector2(0, 0);
         this.mass = mass;
         // For field lines only
         this.lastFrameForce = new Vector2(0, 0);
+        this.tracked = tracked;
+        this.tracking = false;
+
+        if(tracked)
+        {
+            this.lastPositions = [];
+            this.lines = [];
+        }
     }
 
     clearForce()
@@ -179,6 +199,59 @@ class Particle {
         c.force.y = this.force.y;
         return c;
     }
+
+    track(tracking)
+    {
+        if(!this.tracked)
+        {
+            return;
+        }
+
+        if(this.tracking && !tracking)
+        {
+            this.tracking = false;
+            this.lines.forEach((line) => {
+                Game.PIXIApp.stage.removeChild(line);
+            })
+        }
+
+        if(!this.tracking && tracking)
+        {
+            this.tracking = true;
+            this.lines.forEach((line) => {
+                Game.PIXIApp.stage.addChild(line);
+            })
+        }
+
+        let current = new Vector2(this.pos.x, this.pos.y);
+        let last = this.lastPositions[this.lastPositions.length - 1];
+        // Only add point if particle moved to different pixel
+        if(last !== undefined && Math.floor(current.x) === Math.floor(last.x) && Math.floor(current.y) === Math.floor(last.y))
+        {
+            return;
+        }
+        this.lastPositions.push(current);
+        if(this.lastPositions.length > 1)
+        {
+            let last = this.lastPositions[this.lastPositions.length - 2];
+            let l = new PIXI.Graphics();
+            l.lineStyle({width: 1, color: 0xFFFFFF})
+            l.moveTo(last.x, last.y);
+            l.lineTo(current.x, current.y);
+            this.lines.push(l);
+            if(tracking)
+            {
+                Game.PIXIApp.stage.addChild(l);
+            }
+        }
+
+        if(this.lastPositions.length > 180)
+        {
+            this.lastPositions.shift();
+            let line = this.lines.shift();
+            Game.PIXIApp.stage.removeChild(line);
+        }
+    }
 }
 
 class FieldLine extends PIXI.Graphics {
@@ -186,7 +259,7 @@ class FieldLine extends PIXI.Graphics {
         super()
         this.posX = x;
         this.posY = y;
-        this.particle = new Particle(x, y, 1);
+        this.particle = new Particle(x, y, 1, false);
         this.lineStyle({width: 3, color: 0x000000});
         this.moveTo(x, y);
         this.lineTo(x + 1, y + 1);

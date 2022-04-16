@@ -1,5 +1,6 @@
 Game = {}
 Game.PIXIApp = undefined;
+Game.Resources = PIXI.Loader.shared.resources;
 Game.width = 800;
 Game.height = 800;
 Game.player = undefined;
@@ -16,6 +17,8 @@ Game.Inputs.Right = undefined;
 Game.Inputs.Up = undefined;
 Game.Inputs.Down = undefined;
 
+Game.Objects = [];
+
 // Temporary for Particle Dynamics testing
 Game.Forces = [];
 Game.Motion = [];
@@ -27,6 +30,10 @@ Game.SetStableDeltas = SetStableDeltas;
 
 function Init()
 {
+    PIXI.settings.ANISOTROPIC_LEVEL = 16;
+    PIXI.settings.MIPMAP_TEXTURES = PIXI.MIPMAP_MODES.ON;
+    PIXI.settings.FILTER_MULTISAMPLE = PIXI.MSAA_QUALITY.HIGH;
+
     UI.Init();
     LoadAssets();
     ParticleDynamics.Init();
@@ -40,6 +47,7 @@ function LoadAssets()
 
     let sprites = {};
     loader.add("player", "assets/bunny.png");
+    loader.add("plank", "assets/plank.png");
     loader.load((loader, resources) => {
         Game.player = new PIXI.Sprite(resources.player.texture); // We might want to change instantiation to something more dynamic later if we want to have a title screen
     });
@@ -114,7 +122,9 @@ function Setup()
         Game.Motion.push(new Vector2(Math.random() * vel - vel / 2, Math.random() * vel - vel / 2));
     }
 
-    ParticleDynamics.Forces.push(new DragForce(0.1));
+    ParticleDynamics.Forces.push(new DragForce(0.5));
+
+    Game.Objects.push(new Plank(400, 400));
 
     Game.SetSimulationTPS(Game.simulationTPS);
 }
@@ -138,6 +148,7 @@ function Tick()
 
 function SimulationUpdate(delta)
 {
+    // TODO: Move to player control force
     Game.player.x += Game.player.vx * delta;
     Game.player.y += Game.player.vy * delta;
 
@@ -163,6 +174,10 @@ function SimulationUpdate(delta)
             force.center.y -= Game.height;
         }
     })//*/
+
+    Game.Objects.forEach((obj) => {
+        obj.update(delta);
+    })
 
     ParticleDynamics.UpdateDebug(delta);
 }

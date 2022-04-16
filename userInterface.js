@@ -79,5 +79,5 @@ function ApplyForceLines()
 
 function ApplyPaths()
 {
-    // TODO: Implement once paths are in
+    ParticleDynamics.SetDebugPaths(UI.Elements.paths.checked);
 }
