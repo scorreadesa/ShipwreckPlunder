@@ -1,5 +1,6 @@
 body {
     display: flex;
+    margin: 2px;
 }
 
 .game {

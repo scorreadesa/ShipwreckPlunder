@@ -1,10 +1,11 @@
 Game = {}
 Game.PIXIApp = undefined;
 Game.Resources = PIXI.Loader.shared.resources;
-Game.width = 800;
-Game.height = 800;
+Game.MousePosition = new Vector2(0, 0);
+Game.width = 960;
+Game.height = 960;
 Game.player = undefined;
-Game.playerSpeed = 5;
+Game.playerSpeed = 50;
 Game.simulationTPS = 60;
 Game.renderFPS = 60;
 Game.simulationInterval = undefined;
@@ -33,6 +34,7 @@ function Init()
     PIXI.settings.ANISOTROPIC_LEVEL = 16;
     PIXI.settings.MIPMAP_TEXTURES = PIXI.MIPMAP_MODES.ON;
     PIXI.settings.FILTER_MULTISAMPLE = PIXI.MSAA_QUALITY.HIGH;
+    PIXI.settings.SORTABLE_CHILDREN = true;
 
     UI.Init();
     LoadAssets();
@@ -45,66 +47,27 @@ function LoadAssets()
     Game.PIXIApp = new PIXI.Application({width: Game.width, height: Game.height, backgroundColor: 0x1099bb});
     UI.Elements.game.appendChild(Game.PIXIApp.view); // TODO: Once window decoration is here, attach in a way that fits
 
-    let sprites = {};
-    loader.add("player", "assets/bunny.png");
+    Game.PIXIApp.stage.interactive = true;
+    Game.PIXIApp.stage.on("mousemove", (event) => {
+        Game.MousePosition.x = event.data.global.x;
+        Game.MousePosition.y = event.data.global.y;
+    })
+
+    loader.add("player", "assets/pirate.png");
     loader.add("plank", "assets/plank.png");
-    loader.load((loader, resources) => {
-        Game.player = new PIXI.Sprite(resources.player.texture); // We might want to change instantiation to something more dynamic later if we want to have a title screen
-    });
-    loader.onComplete.add(Setup);
+    loader.load(Setup);
 }
 
 function Setup()
 {
-    let player = Game.player;
-    player.position.set(100, 100);
-    player.anchor.set(0.5, 0.5);
-    player.vx = 0;
-    player.vy = 0;
-    Game.PIXIApp.stage.addChild(player);
+    Game.player = new Player(500, 500); // We might want to change instantiation to something more dynamic later if we want to have a title screen
+    Game.Objects.push(Game.player);
 
-    // https://github.com/kittykatattack/learningPixi#introduction
-    Game.Inputs.Left = SetupKey("ArrowLeft");
-    Game.Inputs.Up = SetupKey("ArrowUp");
-    Game.Inputs.Right = SetupKey("ArrowRight");
-    Game.Inputs.Down = SetupKey("ArrowDown");
-
-    Game.Inputs.Left.press = () => {
-        player.vx = -Game.playerSpeed;
-        player.vy = 0;
-    };
-    Game.Inputs.Left.release = () => {
-        if(!Game.Inputs.Right.isDown && player.vy === 0) {
-            player.vx = 0;
-        }
-    };
-    Game.Inputs.Up.press = () => {
-        player.vy = -Game.playerSpeed;
-        player.vx = 0;
-    };
-    Game.Inputs.Up.release = () => {
-        if(!Game.Inputs.Down.isDown && player.vx === 0) {
-            player.vy = 0;
-        }
-    };
-    Game.Inputs.Right.press = () => {
-        player.vx = Game.playerSpeed;
-        player.vy = 0;
-    };
-    Game.Inputs.Right.release = () => {
-        if(!Game.Inputs.Left.isDown && player.vy === 0) {
-            player.vx = 0;
-        }
-    };
-    Game.Inputs.Down.press = () => {
-        player.vy = Game.playerSpeed;
-        player.vx = 0;
-    };
-    Game.Inputs.Down.release = () => {
-        if(!Game.Inputs.Up.isDown && player.vx === 0) {
-            player.vy = 0;
-        }
-    };
+    // https://github.com/kittykatattack/learningPixi
+    Game.Inputs.Left = SetupKey("a");
+    Game.Inputs.Up = SetupKey("w");
+    Game.Inputs.Right = SetupKey("d");
+    Game.Inputs.Down = SetupKey("s");
 
     Game.PIXIApp.ticker.minFPS = 0;
     Game.PIXIApp.ticker.maxFPS = Game.renderFPS;
@@ -120,9 +83,10 @@ function Setup()
         ParticleDynamics.Forces.push(force);
         Game.Forces.push(force);
         Game.Motion.push(new Vector2(Math.random() * vel - vel / 2, Math.random() * vel - vel / 2));
-    }
+    }//*/
 
     ParticleDynamics.Forces.push(new DragForce(0.5));
+    ParticleDynamics.Forces.push(new PlayerMovementForce());
 
     Game.Objects.push(new Plank(400, 400));
 

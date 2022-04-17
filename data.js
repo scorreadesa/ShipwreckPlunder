@@ -10,14 +10,21 @@ class Vector2 {
 
     normalize() {
         let mag = this.magnitude();
-        this.x = this.x / mag;
-        this.y = this.y / mag;
+        if(mag > 0) {
+            this.x = this.x / mag;
+            this.y = this.y / mag;
+        }
     }
 
     normalized()
     {
         let mag = this.magnitude();
-        return new Vector2(this.x / mag, this.y / mag);
+        if(mag > 0) {
+            return new Vector2(this.x / mag, this.y / mag);
+        }
+        else {
+            return new Vector2(0, 0);
+        }
     }
 
     dot(other) {
