@@ -29,8 +29,7 @@ Game.SetSimulationTPS = SetSimulationTPS;
 Game.SetRenderFPS = SetRenderFPS;
 Game.SetStableDeltas = SetStableDeltas;
 
-function Init()
-{
+function Init() {
     PIXI.settings.ANISOTROPIC_LEVEL = 16;
     PIXI.settings.MIPMAP_TEXTURES = PIXI.MIPMAP_MODES.ON;
     PIXI.settings.FILTER_MULTISAMPLE = PIXI.MSAA_QUALITY.HIGH;
@@ -41,11 +40,14 @@ function Init()
     ParticleDynamics.Init();
 }
 
-function LoadAssets()
-{
+function LoadAssets() {
     const loader = PIXI.Loader.shared;
     Game.PIXIApp = new PIXI.Application({width: Game.width, height: Game.height, backgroundColor: 0x1099bb});
     UI.Elements.game.appendChild(Game.PIXIApp.view); // TODO: Once window decoration is here, attach in a way that fits
+
+    Game.PIXIApp.ticker.minFPS = 0;
+    Game.PIXIApp.ticker.maxFPS = Game.renderFPS;
+    Game.SetSimulationTPS(Game.simulationTPS);
 
     Game.PIXIApp.stage.interactive = true;
     Game.PIXIApp.stage.on("mousemove", (event) => {
@@ -53,13 +55,25 @@ function LoadAssets()
         Game.MousePosition.y = event.data.global.y;
     })
 
+    VoronoiFracture.RegisterTexture("plank", "assets/plank.png");
+
     loader.add("player", "assets/pirate.png");
     loader.add("plank", "assets/plank.png");
     loader.load(Setup);
 }
 
-function Setup()
-{
+function Setup() {
+    //CreatePlayer();
+    //CreateForces();
+    let plank = new Plank(400, 400);
+    Game.Objects.push(plank);
+    let time = window.performance.now();
+    VoronoiFracture.FractureSprite(plank.sprite, "plank");
+    let passed = window.performance.now() - time;
+    console.log(passed);
+}
+
+function CreatePlayer() {
     Game.player = new Player(500, 500); // We might want to change instantiation to something more dynamic later if we want to have a title screen
     Game.Objects.push(Game.player);
 
@@ -68,17 +82,15 @@ function Setup()
     Game.Inputs.Up = SetupKey("w");
     Game.Inputs.Right = SetupKey("d");
     Game.Inputs.Down = SetupKey("s");
+}
 
-    Game.PIXIApp.ticker.minFPS = 0;
-    Game.PIXIApp.ticker.maxFPS = Game.renderFPS;
-
+function CreateForces() {
     const power = 20;
     const size = 100;
     const amount = 5;
     const vel = 75;
 
-    for(let i = 0; i < amount; i++)
-    {
+    for (let i = 0; i < amount; i++) {
         let force = new RadialForce(Math.random() * Game.width, Math.random() * Game.height, power, size);
         ParticleDynamics.Forces.push(force);
         Game.Forces.push(force);
@@ -87,21 +99,13 @@ function Setup()
 
     ParticleDynamics.Forces.push(new DragForce(0.5));
     ParticleDynamics.Forces.push(new PlayerMovementForce());
-
-    Game.Objects.push(new Plank(400, 400));
-
-    Game.SetSimulationTPS(Game.simulationTPS);
 }
 
-function Tick()
-{
+function Tick() {
     let delta;
-    if(Game.useStableDeltas || Game.lastTimestamp < 0)
-    {
+    if (Game.useStableDeltas || Game.lastTimestamp < 0) {
         delta = 1 / Game.simulationTPS;
-    }
-    else
-    {
+    } else {
         delta = (window.performance.now() - Game.lastTimestamp) * 0.001;
     }
     Game.lastTimestamp = window.performance.now();
@@ -110,31 +114,20 @@ function Tick()
     SimulationUpdate(delta);
 }
 
-function SimulationUpdate(delta)
-{
-    // TODO: Move to player control force
-    Game.player.x += Game.player.vx * delta;
-    Game.player.y += Game.player.vy * delta;
-
+function SimulationUpdate(delta) {
     Game.Forces.forEach((force, i) => {
         force.center.x += Game.Motion[i].x * delta;
         force.center.y += Game.Motion[i].y * delta;
 
-        if(force.center.x < 0)
-        {
+        if (force.center.x < 0) {
             force.center.x += Game.width;
-        }
-        else if(force.center.x > Game.width)
-        {
+        } else if (force.center.x > Game.width) {
             force.center.x -= Game.width;
         }
 
-        if(force.center.y < 0)
-        {
+        if (force.center.y < 0) {
             force.center.y += Game.height;
-        }
-        else if(force.center.y > Game.height)
-        {
+        } else if (force.center.y > Game.height) {
             force.center.y -= Game.height;
         }
     })//*/
@@ -146,10 +139,8 @@ function SimulationUpdate(delta)
     ParticleDynamics.UpdateDebug(delta);
 }
 
-function SetSimulationTPS(tps)
-{
-    if(Game.simulationInterval !== undefined)
-    {
+function SetSimulationTPS(tps) {
+    if (Game.simulationInterval !== undefined) {
         clearInterval(Game.simulationInterval);
     }
     let millis = 1000 / tps;
@@ -157,17 +148,14 @@ function SetSimulationTPS(tps)
     Game.simulationTPS = tps;
 }
 
-function SetStableDeltas(stable)
-{
+function SetStableDeltas(stable) {
     Game.useStableDeltas = stable;
-    if(stable)
-    {
+    if (stable) {
         Game.lastTimestamp = -1; // Reset to -1 to prevent large jumps when switching back
     }
 }
 
-function SetRenderFPS(fps)
-{
+function SetRenderFPS(fps) {
     Game.renderFPS = fps;
     Game.PIXIApp.ticker.maxFPS = fps;
 }
@@ -182,8 +170,8 @@ function SetupKey(value) {
     key.release = undefined;
     // downHandler
     key.downHandler = (event) => {
-        if(event.key === key.value) {
-            if(key.isUp && key.press) {
+        if (event.key === key.value) {
+            if (key.isUp && key.press) {
                 key.press();
             }
             key.isDown = true;
@@ -193,8 +181,8 @@ function SetupKey(value) {
     };
     // upHandler
     key.upHandler = (event) => {
-        if(event.key === key.value) {
-            if(key.isDown && key.release) {
+        if (event.key === key.value) {
+            if (key.isDown && key.release) {
                 key.release();
             }
             key.isDown = false;

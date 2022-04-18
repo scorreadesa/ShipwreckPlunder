@@ -3,8 +3,8 @@ ParticleDynamics.Forces = [];
 ParticleDynamics.DebugLines = [];
 ParticleDynamics.h = 1 / 180;
 ParticleDynamics.eulerSolver = false;
-ParticleDynamics.debugLinesEnabled = true;
-ParticleDynamics.debugPathsEnabled = true;
+ParticleDynamics.debugLinesEnabled = false;
+ParticleDynamics.debugPathsEnabled = false;
 ParticleDynamics.debugLinesLengthMult = 1;
 
 ParticleDynamics.Init = Init;
@@ -14,8 +14,7 @@ ParticleDynamics.DisableForceLines = DisableForceLines;
 ParticleDynamics.SetDebugPaths = SetDebugPaths;
 ParticleDynamics.UpdateParticle = UpdateParticle;
 
-function Init()
-{
+function Init() {
     SetupDebug();
 }
 
@@ -98,22 +97,18 @@ function CalculateForce(particle) {
 ////////
 // Debug
 
-function SetupDebug()
-{
+function SetupDebug() {
     let xGrid = 50;
     let yGrid = 50;
-    for(let x = (Game.width % xGrid) / 2; x < Game.width; x += xGrid)
-    {
-        for(let y = (Game.height % yGrid) / 2; y < Game.height; y += yGrid)
-        {
+    for (let x = (Game.width % xGrid) / 2; x < Game.width; x += xGrid) {
+        for (let y = (Game.height % yGrid) / 2; y < Game.height; y += yGrid) {
             let line = new FieldLine(x, y);
             ParticleDynamics.DebugLines.push(line);
             //app.stage.addChild(line);
         }
     }//*/
 
-    if(ParticleDynamics.debugLinesEnabled)
-    {
+    if (ParticleDynamics.debugLinesEnabled) {
         EnableForceLines();
     }
 
@@ -122,31 +117,26 @@ function SetupDebug()
     app.stage.addChild(line);//*/
 }
 
-function EnableForceLines()
-{
+function EnableForceLines() {
     ParticleDynamics.DebugLines.forEach((line) => {
         Game.PIXIApp.stage.addChild(line);
     })
     ParticleDynamics.debugLinesEnabled = true;
 }
 
-function DisableForceLines()
-{
+function DisableForceLines() {
     ParticleDynamics.DebugLines.forEach((line) => {
         Game.PIXIApp.stage.removeChild(line);
     })
     ParticleDynamics.debugLinesEnabled = false;
 }
 
-function SetDebugPaths(paths)
-{
+function SetDebugPaths(paths) {
     ParticleDynamics.debugPathsEnabled = paths;
 }
 
-function UpdateDebug(delta)
-{
-    if(!ParticleDynamics.debugLinesEnabled)
-    {
+function UpdateDebug(delta) {
+    if (!ParticleDynamics.debugLinesEnabled) {
         return;
     }
 
@@ -170,29 +160,25 @@ class Particle {
         this.tracking = false;
         this.isPlayer = false;
 
-        if(tracked)
-        {
+        if (tracked) {
             this.lastPositions = [];
             this.lines = [];
         }
     }
 
-    clearForce()
-    {
+    clearForce() {
         this.force.x = 0;
         this.force.y = 0;
     }
 
-    applyChanges(changes, multiplier)
-    {
+    applyChanges(changes, multiplier) {
         this.pos.x += changes.posX * multiplier;
         this.pos.y += changes.posY * multiplier;
         this.vel.x += changes.velX * multiplier;
         this.vel.y += changes.velY * multiplier;
     }
 
-    clone()
-    {
+    clone() {
         let c = new Particle(this.pos.x, this.pos.y, this.mass);
         c.vel.x = this.vel.x;
         c.vel.y = this.vel.y;
@@ -202,21 +188,17 @@ class Particle {
         return c;
     }
 
-    track(tracking)
-    {
-        if(!this.tracked)
-        {
+    track(tracking) {
+        if (!this.tracked) {
             return;
         }
 
-        if(this.tracking && !tracking)
-        {
+        if (this.tracking && !tracking) {
             this.tracking = false;
             this.clearTracking();
         }
 
-        if(!this.tracking && tracking)
-        {
+        if (!this.tracking && tracking) {
             this.tracking = true;
             this.lines.forEach((line) => {
                 Game.PIXIApp.stage.addChild(line);
@@ -226,13 +208,11 @@ class Particle {
         let current = new Vector2(this.pos.x, this.pos.y);
         let last = this.lastPositions[this.lastPositions.length - 1];
         // Only add point if particle moved to different pixel
-        if(last !== undefined && Math.floor(current.x) === Math.floor(last.x) && Math.floor(current.y) === Math.floor(last.y))
-        {
+        if (last !== undefined && Math.floor(current.x) === Math.floor(last.x) && Math.floor(current.y) === Math.floor(last.y)) {
             return;
         }
         this.lastPositions.push(current);
-        if(this.lastPositions.length > 1)
-        {
+        if (this.lastPositions.length > 1) {
             let last = this.lastPositions[this.lastPositions.length - 2];
             let l = new PIXI.Graphics();
             l.zIndex = 999;
@@ -240,14 +220,12 @@ class Particle {
             l.moveTo(last.x, last.y);
             l.lineTo(current.x, current.y);
             this.lines.push(l);
-            if(tracking)
-            {
+            if (tracking) {
                 Game.PIXIApp.stage.addChild(l);
             }
         }
 
-        if(this.lastPositions.length > 180)
-        {
+        if (this.lastPositions.length > 180) {
             this.lastPositions.shift();
             let line = this.lines.shift();
             Game.PIXIApp.stage.removeChild(line);
@@ -273,8 +251,7 @@ class FieldLine extends PIXI.Graphics {
         this.lineTo(x + 1, y + 1);
     }
 
-    update(delta)
-    {
+    update(delta) {
         this.particle.pos.x = this.posX;
         this.particle.pos.y = this.posY;
         this.particle.vel.x = 0;
@@ -293,8 +270,7 @@ class ConstantForce {
         this.y = y;
     }
 
-    apply(particle)
-    {
+    apply(particle) {
         particle.force.x += this.x / particle.mass;
         particle.force.y += this.y / particle.mass;
     }
@@ -307,8 +283,7 @@ class RadialForce {
         this.size = size;
     }
 
-    apply(particle)
-    {
+    apply(particle) {
         let dir = this.center.subtractPure(particle.pos);
         let distance = dir.magnitude();
         dir.normalize();
@@ -323,8 +298,7 @@ class DragForce {
         this.coefficient = coefficient;
     }
 
-    apply(particle)
-    {
+    apply(particle) {
         particle.force.x -= particle.vel.x * this.coefficient;
         particle.force.y -= particle.vel.y * this.coefficient;
     }
@@ -334,22 +308,20 @@ class PlayerMovementForce {
     constructor() {
     }
 
-    apply(particle)
-    {
-        if(particle.isPlayer)
-        {
+    apply(particle) {
+        if (particle.isPlayer) {
             let horizontal = 0;
             let vertical = 0;
-            if(Game.Inputs.Left.isDown) {
+            if (Game.Inputs.Left.isDown) {
                 horizontal -= 1;
             }
-            if(Game.Inputs.Right.isDown) {
+            if (Game.Inputs.Right.isDown) {
                 horizontal += 1;
             }
-            if(Game.Inputs.Up.isDown) {
+            if (Game.Inputs.Up.isDown) {
                 vertical -= 1;
             }
-            if(Game.Inputs.Down.isDown) {
+            if (Game.Inputs.Down.isDown) {
                 vertical += 1;
             }
             let direction = new Vector2(horizontal, vertical);

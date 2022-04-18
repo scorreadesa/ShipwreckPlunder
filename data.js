@@ -10,19 +10,17 @@ class Vector2 {
 
     normalize() {
         let mag = this.magnitude();
-        if(mag > 0) {
+        if (mag > 0) {
             this.x = this.x / mag;
             this.y = this.y / mag;
         }
     }
 
-    normalized()
-    {
+    normalized() {
         let mag = this.magnitude();
-        if(mag > 0) {
+        if (mag > 0) {
             return new Vector2(this.x / mag, this.y / mag);
-        }
-        else {
+        } else {
             return new Vector2(0, 0);
         }
     }
@@ -41,13 +39,11 @@ class Vector2 {
         this.y -= other.y;
     }
 
-    addPure(other)
-    {
+    addPure(other) {
         return new Vector2(this.x + other.x, this.y + other.y);
     }
 
-    subtractPure(other)
-    {
+    subtractPure(other) {
         return new Vector2(this.x - other.x, this.y - other.y);
     }
 
@@ -61,8 +57,7 @@ class Vector2 {
         this.y *= other.y;
     }
 
-    scalarDivide(scalar)
-    {
+    scalarDivide(scalar) {
         this.x /= scalar;
         this.y /= scalar;
     }

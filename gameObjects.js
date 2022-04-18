@@ -3,7 +3,6 @@ class GameObject {
         this.sprite = sprite;
         this.sprite.x = x;
         this.sprite.y = y;
-        this.sprite.anchor.set(0.5);
         Game.PIXIApp.stage.addChild(this.sprite);
     }
 
@@ -18,6 +17,7 @@ class Player extends GameObject {
         this.particle = new Particle(x, y, 1, true);
         this.particle.isPlayer = true;
         this.sprite.scale.set(0.5);
+        this.sprite.anchor.set(0.5);
         this.sprite.zIndex = 999;
     }
 
@@ -28,8 +28,7 @@ class Player extends GameObject {
         let look = Game.MousePosition.subtractPure(this.particle.pos);
         look.normalize();
         let angle = Math.asin(look.y / (Math.sqrt(look.x * look.x + look.y * look.y))) * (180 / Math.PI);
-        if(look.x <= 0)
-        {
+        if (look.x <= 0) {
             angle = 180 - angle;
         }
         this.sprite.angle = angle + 90;
@@ -40,8 +39,9 @@ class Plank extends GameObject {
     constructor(x, y) {
         super(x, y, new PIXI.Sprite(Game.Resources.plank.texture));
         this.particle = new Particle(x, y, 1, true);
+        this.sprite.anchor.set(0.5);
         this.sprite.scale.set(0.5);
-        this.sprite.angle = 40;
+        //this.sprite.angle = 40;
     }
 
     update(delta) {
@@ -53,5 +53,27 @@ class Plank extends GameObject {
     destroy() {
         super.destroy();
         this.particle.clearTracking();
+    }
+}
+
+class Fragment extends GameObject {
+    constructor(x, y, sprite, fade) {
+        super(x, y, sprite);
+        this.fade = fade;
+        this.currentFade = fade;
+        this.particle = new Particle(x, y, 0.1, false); // TODO: Calculate mass based on pixels if needed
+    }
+
+    update(delta)
+    {
+        ParticleDynamics.UpdateParticle(this.particle, delta);
+        this.sprite.x = this.particle.pos.x;
+        this.sprite.y = this.particle.pos.y;
+        this.currentFade -= delta;
+        this.sprite.alpha = this.currentFade / this.fade;
+    }
+
+    destroy() {
+        super.destroy();
     }
 }

@@ -11,8 +11,7 @@ UI.ApplyPaths = ApplyPaths;
 
 UI.Elements = {};
 
-function Init()
-{
+function Init() {
     UI.Elements.game = document.getElementById("game");
     UI.Elements.tps = document.getElementById("tps");
     UI.Elements.fps = document.getElementById("fps");
@@ -31,53 +30,42 @@ function Init()
     UI.Elements.paths.checked = ParticleDynamics.debugPathsEnabled;
 }
 
-function UpdateInterface()
-{
+function UpdateInterface() {
 
 }
 
-function ApplyTPS()
-{
+function ApplyTPS() {
     let tps = parseInt(UI.Elements.tps.value, 10);
     Game.SetSimulationTPS(Math.min(180, Math.max(0, tps)));
     UI.Elements.tps.value = tps;
 }
 
-function ApplyFPS()
-{
+function ApplyFPS() {
     let fps = parseInt(UI.Elements.fps.value, 10);
     Game.SetRenderFPS(Math.min(144, Math.max(0, fps)));
     UI.Elements.tps.value = fps;
 }
 
-function ApplyDeltas()
-{
+function ApplyDeltas() {
     Game.SetStableDeltas(UI.Elements.deltas.checked);
 }
 
-function ApplyH()
-{
+function ApplyH() {
     ParticleDynamics.h = parseFloat(UI.Elements.hValue.value);
 }
 
-function ApplyEuler()
-{
+function ApplyEuler() {
     ParticleDynamics.eulerSolver = UI.Elements.euler.checked;
 }
 
-function ApplyForceLines()
-{
-    if(UI.Elements.lines.checked)
-    {
+function ApplyForceLines() {
+    if (UI.Elements.lines.checked) {
         ParticleDynamics.EnableForceLines();
-    }
-    else
-    {
+    } else {
         ParticleDynamics.DisableForceLines();
     }
 }
 
-function ApplyPaths()
-{
+function ApplyPaths() {
     ParticleDynamics.SetDebugPaths(UI.Elements.paths.checked);
 }
