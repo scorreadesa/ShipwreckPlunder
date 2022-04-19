@@ -53,7 +53,7 @@ function LoadAssets() {
     Game.PIXIApp.stage.on("mousemove", (event) => {
         Game.MousePosition.x = event.data.global.x;
         Game.MousePosition.y = event.data.global.y;
-    })
+    });
 
     VoronoiFracture.RegisterTexture("plank", "assets/plank.png");
 
@@ -63,8 +63,8 @@ function LoadAssets() {
 }
 
 function Setup() {
-    //CreatePlayer();
-    //CreateForces();
+    CreatePlayer();
+    CreateForces();
     let plank = new Plank(400, 400);
     Game.Objects.push(plank);
     let time = window.performance.now();
