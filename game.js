@@ -63,18 +63,18 @@ function LoadAssets() {
 }
 
 function Setup() {
-    //CreatePlayer();
-    //CreateForces();
+    CreatePlayer();
+    CreateForces();
     let plank = new Plank(400, 400);
-    Game.Objects.push(plank);
+    Game.Objects.push(plank); // TODO: Move adding and removing to this list to GameObject constructor and destroy()
     let time = window.performance.now();
-    VoronoiFracture.FractureSprite(plank.sprite, "plank");
+    //VoronoiFracture.FractureSprite(plank.sprite, "plank");
     let passed = window.performance.now() - time;
     console.log(passed);
 }
 
 function CreatePlayer() {
-    Game.player = new Player(500, 500); // We might want to change instantiation to something more dynamic later if we want to have a title screen
+    Game.player = new Player(500, 500);
     Game.Objects.push(Game.player);
 
     // https://github.com/kittykatattack/learningPixi
