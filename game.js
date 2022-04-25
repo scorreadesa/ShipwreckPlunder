@@ -63,14 +63,14 @@ function LoadAssets() {
 }
 
 function Setup() {
-    CreatePlayer();
-    CreateForces();
-    let plank = new Plank(400, 400);
+    //CreatePlayer();
+    //CreateForces();
+    /*let plank = new Plank(400, 400);
     Game.Objects.push(plank);
     let time = window.performance.now();
     VoronoiFracture.FractureSprite(plank.sprite, "plank");
     let passed = window.performance.now() - time;
-    console.log(passed);
+    console.log(passed);*/
 }
 
 function CreatePlayer() {
@@ -112,6 +112,12 @@ function Tick() {
 
     UI.UpdateInterface();
     SimulationUpdate(delta);
+
+    let control_points = [new Vector2(20, 20), new Vector2(90, 80), new Vector2(120, 150),
+        new Vector2(200, 180), new Vector2(250, 220), new Vector2(280, 250), new Vector2(290, 300)];
+    let cmr = new CatmullRom(0.25);
+    cmr.addPoints(control_points);
+    cmr.addPoint(new Vector2(350, 420));
 }
 
 function SimulationUpdate(delta) {
