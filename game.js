@@ -56,26 +56,26 @@ function LoadAssets() {
     })
 
     VoronoiFracture.RegisterTexture("plank", "assets/plank.png");
+    VoronoiFracture.RegisterTexture("ship2", "assets/ship2.png");
 
     loader.add("player", "assets/pirate.png");
     loader.add("plank", "assets/plank.png");
+    loader.add("ship2", "assets/ship2.png");
     loader.load(Setup);
 }
 
 function Setup() {
-    CreatePlayer();
-    CreateForces();
-    let plank = new Plank(400, 400);
-    Game.Objects.push(plank); // TODO: Move adding and removing to this list to GameObject constructor and destroy()
+    //CreatePlayer();
+    //CreateForces();
+    let ship = new ShipPart(500, 500);
     let time = window.performance.now();
-    //VoronoiFracture.FractureSprite(plank.sprite, "plank");
+    VoronoiFracture.FractureSprite(ship.sprite, "ship2");
     let passed = window.performance.now() - time;
     console.log(passed);
 }
 
 function CreatePlayer() {
     Game.player = new Player(500, 500);
-    Game.Objects.push(Game.player);
 
     // https://github.com/kittykatattack/learningPixi
     Game.Inputs.Left = SetupKey("a");

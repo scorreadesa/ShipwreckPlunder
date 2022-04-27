@@ -4,10 +4,16 @@ class GameObject {
         this.sprite.x = x;
         this.sprite.y = y;
         Game.PIXIApp.stage.addChild(this.sprite);
+        Game.Objects.push(this);
+    }
+
+    update(delta) {
+
     }
 
     destroy() {
         Game.PIXIApp.stage.removeChild(this.sprite);
+        Game.Objects = Game.Objects.filter((v) => {return v !== this});
     }
 }
 
@@ -31,7 +37,7 @@ class Player extends GameObject {
         if (look.x <= 0) {
             angle = 180 - angle;
         }
-        this.sprite.angle = angle + 90;
+        this.sprite.angle = angle;
     }
 }
 
@@ -56,6 +62,14 @@ class Plank extends GameObject {
     }
 }
 
+class ShipPart extends GameObject {
+    constructor(x, y) {
+        super(x, y,  new PIXI.Sprite(Game.Resources.ship2.texture));
+        //this.sprite.scale.set(0.5);
+        this.sprite.anchor.set(0.5);
+    }
+}
+
 class Fragment extends GameObject {
     constructor(x, y, sprite, fade) {
         super(x, y, sprite);
@@ -75,5 +89,6 @@ class Fragment extends GameObject {
 
     destroy() {
         super.destroy();
+        this.sprite.destroy(true); // Destroys texture too
     }
 }
