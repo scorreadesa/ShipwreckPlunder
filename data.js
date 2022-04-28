@@ -61,4 +61,13 @@ class Vector2 {
         this.x /= scalar;
         this.y /= scalar;
     }
+
+    rotate(angle)
+    {
+        let radians = angle * (Math.PI / 180);
+        let tempX = this.x;
+        let tempY = this.y;
+        this.x = Math.cos(radians) * tempX - Math.sin(radians) * tempY;
+        this.y = Math.sin(radians) * tempX + Math.cos(radians) * tempY;
+    }
 }

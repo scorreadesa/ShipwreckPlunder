@@ -65,7 +65,8 @@ class Plank extends GameObject {
 class ShipPart extends GameObject {
     constructor(x, y) {
         super(x, y,  new PIXI.Sprite(Game.Resources.ship2.texture));
-        //this.sprite.scale.set(0.5);
+        this.sprite.scale.set(0.7);
+        this.sprite.angle = 0;
         this.sprite.anchor.set(0.5);
     }
 }

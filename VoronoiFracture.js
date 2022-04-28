@@ -2,8 +2,11 @@ VoronoiFracture = {}
 VoronoiFracture.debugShowPoints = true;
 VoronoiFracture.debugShowField = true;
 VoronoiFracture.ImageBuffer = {};
-VoronoiFracture.noised = true;
-VoronoiFracture.noiseScale = 25;
+VoronoiFracture.noised = false;
+VoronoiFracture.octaves = 4;
+VoronoiFracture.scale = 0.2;
+VoronoiFracture.persistence = 0.5;
+VoronoiFracture.lacunarity = 2.1;
 VoronoiFracture.noiseImpact = 3.5;
 
 VoronoiFracture.FractureSprite = FractureSprite;
@@ -24,14 +27,15 @@ function RegisterTexture(name, path) {
 
 function FractureSprite(sprite, textureName) {
     let time = window.performance.now();
-    let width = sprite.width;
-    let height = sprite.height;
-    let cells = [];
     let data = VoronoiFracture.ImageBuffer[textureName];
+    let width = data.data.width; //sprite.width;
+    let height = data.data.height; //sprite.height;
+    let cells = [];
+
     noise.seed(Math.random());
 
     // TODO: Split into separate methods for different scattering approaches
-    for (let i = 0; i < 50; i++) {
+    for (let i = 0; i < 15; i++) {
         cells.push(new VoronoiCell(Math.random() * height, Math.random() * width, RandomColor()));
     }
 
@@ -60,17 +64,20 @@ function FractureSprite(sprite, textureName) {
             }
 
             if (VoronoiFracture.noised && second >= 0) {
-                let value = noise.perlin2(x / width * VoronoiFracture.noiseScale, y / height * VoronoiFracture.noiseScale);
-                dist += value * VoronoiFracture.noiseImpact;
-                distSecond -= value * VoronoiFracture.noiseImpact;
-                if(distSecond < dist)
-                {
+                let value = OctaveNoise(x / width, y / height, VoronoiFracture.octaves, VoronoiFracture.scale, VoronoiFracture.persistence, VoronoiFracture.lacunarity);
+                dist += value * VoronoiFracture.noiseImpact * sprite.scale.x; // Assuming uniformly scaled sprites
+                distSecond -= value * VoronoiFracture.noiseImpact * sprite.scale.x;
+                if (distSecond < dist) {
                     closest = second;
                 }
             }
 
             cells[closest].updateBounds(x, y);
-            pixels.push(cells[closest].color); // TODO: Check for debug option
+            if(VoronoiFracture.debugShowField)
+            {
+                pixels.push(cells[closest].color);
+                //pixels.push(Grayscale(OctaveNoise(x / width, y / height, 3, 0.1, 0.5, 2.1) * 0.5));
+            }
             indices.push(closest);
         }
     }
@@ -91,12 +98,21 @@ function FractureSprite(sprite, textureName) {
 
     let set = window.performance.now() - time;
 
-    let s = SpriteFromPixels(pixels, width, height);
-    s.x = sprite.x;
-    s.y = sprite.y;
-    s.angle = sprite.angle;
-    s.anchor = sprite.anchor;
-    Game.PIXIApp.stage.addChild(s);
+    if(VoronoiFracture.debugShowField)
+    {
+        let s = SpriteFromPixels(pixels, width, height);
+        s.x = sprite.x;
+        s.y = sprite.y;
+        s.angle = sprite.angle;
+        s.anchor = sprite.anchor;
+        s.scale = sprite.scale;
+        Game.PIXIApp.stage.addChild(s);
+
+        setTimeout(() => {
+            Game.PIXIApp.stage.removeChild(s);
+            s.destroy(true);
+        }, 5000)
+    }
 
     cells.forEach((cell) => {
         CreateFragment(cell, sprite, width, height);
@@ -117,16 +133,44 @@ function Distance(a, b, x, y) {
     return Math.sqrt(xDist * xDist + yDist * yDist);
 }
 
+function OctaveNoise(x, y, octaves, scale, persistence, lacunarity)
+{
+    let amplitude = 1;
+    let frequency = 1;
+    let cumulative = 0;
+
+    for(let o = 0; o < octaves; o++)
+    {
+        let sample = noise.perlin2(x / scale * frequency, y / scale * frequency);
+        cumulative += sample;
+        amplitude *= persistence;
+        frequency *= lacunarity;
+    }
+
+    return cumulative;
+}
+
 function CreateFragment(cell, sprite, width, height) {
     if (cell.pixels.length === 0) {
         return;
     }
     let s = SpriteFromPixels(cell.pixels, cell.maxX - cell.minX + 1, cell.maxY - cell.minY + 1);
-    //Debug.DrawLine(sprite.x, sprite.y, sprite.x + cell.seed.y - width / 2, sprite.y + cell.seed.x - height / 2, 5000);
+    let offset = new Vector2(cell.seed.x - width / 2, cell.seed.y - height / 2);
+    offset.scalarMultiply(sprite.scale.x);
+    offset.rotate(sprite.angle);
+    if(VoronoiFracture.debugShowPoints)
+    {
+        //Debug.DrawLine(sprite.x, sprite.y, sprite.x + offset.x, sprite.y + offset.y, 5000);
+        Debug.DrawDot(sprite.x + offset.x, sprite.y + offset.y, 3, 5000);
+    }
     s.anchor.set((cell.seed.y - cell.minX) / (cell.maxX - cell.minX + 1), (cell.seed.x - cell.minY) / (cell.maxY - cell.minY + 1));
-    // TODO: Apply rotations
-    let x = sprite.x + cell.seed.y - width / 2;
-    let y = sprite.y + cell.seed.x - height / 2;
+    s.angle = sprite.angle;
+    s.scale = sprite.scale;
+    let offset2 = new Vector2(cell.seed.y - width / 2, cell.seed.x - height / 2);
+    offset2.scalarMultiply(sprite.scale.x)
+    offset2.rotate(sprite.angle);
+    let x = sprite.x + offset2.x;
+    let y = sprite.y + offset2.y;
     let fade = 5;
     let frag = new Fragment(x, y, s, fade);
     setTimeout(() => {
@@ -144,10 +188,17 @@ function SpriteFromPixels(pixels, width, height) {
 }
 
 function RandomColor() {
-    let r = Math.floor(256 * Math.random());
+    let r = Math.floor(255 * Math.random());
     let g = Math.floor(256 * Math.random());
     let b = Math.floor(256 * Math.random());
     return 255 * 256 * 256 * 256 + r * 256 * 256 + g * 256 + b; // It's ARGB internally
+}
+
+function Grayscale(value)
+{
+    value = Math.min(1, Math.max(0, (value + 1) / 2));
+    let v = Math.floor(255 * value);
+    return 255 * 256 * 256 * 256 + v * 256 * 256 + v * 256 + v;
 }
 
 //////////
