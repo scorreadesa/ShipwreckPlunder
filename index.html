@@ -51,6 +51,20 @@
             <label for="paths">Particle Paths: </label>
             <input id="paths" type="checkbox" onchange="UI.ApplyPaths()">
         </div>
+
+        <h1>Voronoi Fracture</h1>
+        <div class="sidebar-entry">
+            <label for="noised">Noised: </label>
+            <input id="noised" type="checkbox" onchange="UI.ApplyNoised()">
+        </div>
+        <div class="sidebar-entry">
+            <label for="centers">Seed Points: </label>
+            <input id="centers" type="checkbox" onchange="UI.ApplyFractureDebugPoints()">
+        </div>
+        <div class="sidebar-entry">
+            <label for="cells">Voronoi Cells: </label>
+            <input id="cells" type="checkbox" onchange="UI.ApplyFractureDebugField()">
+        </div>
         <!--<p>Score:</p>
         <p>Health:</p>
         <p>Time:</p>

@@ -8,6 +8,9 @@ UI.ApplyH = ApplyH;
 UI.ApplyEuler = ApplyEuler;
 UI.ApplyForceLines = ApplyForceLines;
 UI.ApplyPaths = ApplyPaths;
+UI.ApplyFractureDebugPoints = ApplyFractureDebugPoints;
+UI.ApplyFractureDebugField = ApplyFractureDebugField;
+UI.ApplyNoised = ApplyNoised;
 
 UI.Elements = {};
 
@@ -20,6 +23,9 @@ function Init() {
     UI.Elements.euler = document.getElementById("euler");
     UI.Elements.lines = document.getElementById("lines");
     UI.Elements.paths = document.getElementById("paths");
+    UI.Elements.noised = document.getElementById("noised");
+    UI.Elements.centers = document.getElementById("centers");
+    UI.Elements.cells = document.getElementById("cells");
 
     UI.Elements.tps.value = Game.simulationTPS;
     UI.Elements.fps.value = Game.renderFPS;
@@ -28,6 +34,9 @@ function Init() {
     UI.Elements.euler.checked = ParticleDynamics.eulerSolver;
     UI.Elements.lines.checked = ParticleDynamics.debugLinesEnabled;
     UI.Elements.paths.checked = ParticleDynamics.debugPathsEnabled;
+    UI.Elements.paths.noised = VoronoiFracture.noised;
+    UI.Elements.paths.centers = VoronoiFracture.debugShowPoints;
+    UI.Elements.paths.cells = VoronoiFracture.debugShowField;
 }
 
 function UpdateInterface() {
@@ -68,4 +77,16 @@ function ApplyForceLines() {
 
 function ApplyPaths() {
     ParticleDynamics.SetDebugPaths(UI.Elements.paths.checked);
+}
+
+function ApplyFractureDebugPoints() {
+
+}
+
+function ApplyFractureDebugField() {
+
+}
+
+function ApplyNoised() {
+
 }

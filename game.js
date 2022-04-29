@@ -12,6 +12,8 @@ Game.simulationInterval = undefined;
 Game.lastTimestamp = -1;
 Game.useStableDeltas = true; // If false uses exact high-res clock to calculate deltas, if true uses 1/TPS. Eliminates debug line flickering if enabled.
 
+Game.cannonCooldown = 1;
+
 Game.Inputs = {}
 Game.Inputs.Left = undefined;
 Game.Inputs.Right = undefined;
@@ -28,6 +30,7 @@ Game.Init = Init;
 Game.SetSimulationTPS = SetSimulationTPS;
 Game.SetRenderFPS = SetRenderFPS;
 Game.SetStableDeltas = SetStableDeltas;
+Game.GetCollidingObjects = GetCollidingObjects;
 
 function Init() {
     PIXI.settings.ANISOTROPIC_LEVEL = 16;
@@ -59,19 +62,19 @@ function LoadAssets() {
     VoronoiFracture.RegisterTexture("ship2", "assets/ship2.png");
 
     loader.add("player", "assets/pirate.png");
+    loader.add("cannonball", "assets/cannonball.png");
     loader.add("plank", "assets/plank.png");
-    loader.add("ship2", "assets/ship2.png");
+    loader.add("ship2", "assets/ship2w.png");
     loader.load(Setup);
 }
 
 function Setup() {
-    //CreatePlayer();
+    ParticleDynamics.Forces.push(new DragForce(0.5));
+    ParticleDynamics.Forces.push(new PlayerMovementForce());
+
+    CreatePlayer();
     //CreateForces();
-    let ship = new ShipPart(500, 500);
-    let time = window.performance.now();
-    VoronoiFracture.FractureSprite(ship.sprite, "ship2");
-    let passed = window.performance.now() - time;
-    console.log(passed);
+    let ship = new ShipPart(500, 100);
 }
 
 function CreatePlayer() {
@@ -82,6 +85,11 @@ function CreatePlayer() {
     Game.Inputs.Up = SetupKey("w");
     Game.Inputs.Right = SetupKey("d");
     Game.Inputs.Down = SetupKey("s");
+    Game.Inputs.Space = SetupKey(" ");
+
+    Game.Inputs.Space.press = function () {
+        Game.player.shoot();
+    }
 }
 
 function CreateForces() {
@@ -96,9 +104,6 @@ function CreateForces() {
         Game.Forces.push(force);
         Game.Motion.push(new Vector2(Math.random() * vel - vel / 2, Math.random() * vel - vel / 2));
     }//*/
-
-    ParticleDynamics.Forces.push(new DragForce(0.5));
-    ParticleDynamics.Forces.push(new PlayerMovementForce());
 }
 
 function Tick() {
@@ -109,7 +114,6 @@ function Tick() {
         delta = (window.performance.now() - Game.lastTimestamp) * 0.001;
     }
     Game.lastTimestamp = window.performance.now();
-
     UI.UpdateInterface();
     SimulationUpdate(delta);
 }
@@ -158,6 +162,33 @@ function SetStableDeltas(stable) {
 function SetRenderFPS(fps) {
     Game.renderFPS = fps;
     Game.PIXIApp.ticker.maxFPS = fps;
+}
+
+function GetCollidingObjects(obj) {
+    if(obj.collisionRadius <= 0)
+    {
+        return;
+    }
+    let objects = [];
+    Game.Objects.forEach((object) => {
+        if(object.collisionRadius <= 0)
+        {
+            return;
+        }
+        if(object === obj)
+        {
+            return;
+        }
+        let xDelta = object.sprite.x - obj.sprite.x;
+        let yDelta = object.sprite.y - obj.sprite.y;
+        let distance = Math.sqrt(xDelta * xDelta + yDelta * yDelta);
+        if(distance < object.collisionRadius + obj.collisionRadius)
+        {
+            objects.push(object);
+            Debug.DrawDot(object.sprite.x, object.sprite.y, object.collisionRadius, 1000);
+        }
+    });
+    return objects;
 }
 
 // https://github.com/kittykatattack/learningPixi#introduction

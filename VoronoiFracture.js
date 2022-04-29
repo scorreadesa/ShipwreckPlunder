@@ -1,8 +1,9 @@
 VoronoiFracture = {}
 VoronoiFracture.debugShowPoints = true;
 VoronoiFracture.debugShowField = true;
-VoronoiFracture.ImageBuffer = {};
 VoronoiFracture.noised = false;
+VoronoiFracture.type = 0;
+VoronoiFracture.ImageBuffer = {};
 VoronoiFracture.octaves = 4;
 VoronoiFracture.scale = 0.2;
 VoronoiFracture.persistence = 0.5;
@@ -30,13 +31,14 @@ function FractureSprite(sprite, textureName) {
     let data = VoronoiFracture.ImageBuffer[textureName];
     let width = data.data.width; //sprite.width;
     let height = data.data.height; //sprite.height;
-    let cells = [];
+    let cells;
 
     noise.seed(Math.random());
 
-    // TODO: Split into separate methods for different scattering approaches
-    for (let i = 0; i < 15; i++) {
-        cells.push(new VoronoiCell(Math.random() * height, Math.random() * width, RandomColor()));
+    if (VoronoiFracture.type === 0) {
+        cells = RandomPoints(width, height,15);
+    } else if (VoronoiFracture.type === 1) {
+
     }
 
     let init = window.performance.now() - time;
@@ -73,8 +75,7 @@ function FractureSprite(sprite, textureName) {
             }
 
             cells[closest].updateBounds(x, y);
-            if(VoronoiFracture.debugShowField)
-            {
+            if (VoronoiFracture.debugShowField) {
                 pixels.push(cells[closest].color);
                 //pixels.push(Grayscale(OctaveNoise(x / width, y / height, 3, 0.1, 0.5, 2.1) * 0.5));
             }
@@ -98,8 +99,7 @@ function FractureSprite(sprite, textureName) {
 
     let set = window.performance.now() - time;
 
-    if(VoronoiFracture.debugShowField)
-    {
+    if (VoronoiFracture.debugShowField) {
         let s = SpriteFromPixels(pixels, width, height);
         s.x = sprite.x;
         s.y = sprite.y;
@@ -127,20 +127,26 @@ function FractureSprite(sprite, textureName) {
     console.log("Sprites " + (sprites - set))
 }
 
+function RandomPoints(width, height, amount) {
+    let cells = [];
+    for (let i = 0; i < amount; i++) {
+        cells.push(new VoronoiCell(Math.random() * height, Math.random() * width, RandomColor()));
+    }
+    return cells;
+}
+
 function Distance(a, b, x, y) {
     let xDist = a - x;
     let yDist = b - y;
     return Math.sqrt(xDist * xDist + yDist * yDist);
 }
 
-function OctaveNoise(x, y, octaves, scale, persistence, lacunarity)
-{
+function OctaveNoise(x, y, octaves, scale, persistence, lacunarity) {
     let amplitude = 1;
     let frequency = 1;
     let cumulative = 0;
 
-    for(let o = 0; o < octaves; o++)
-    {
+    for (let o = 0; o < octaves; o++) {
         let sample = noise.perlin2(x / scale * frequency, y / scale * frequency);
         cumulative += sample;
         amplitude *= persistence;
@@ -158,10 +164,9 @@ function CreateFragment(cell, sprite, width, height) {
     let offset = new Vector2(cell.seed.x - width / 2, cell.seed.y - height / 2);
     offset.scalarMultiply(sprite.scale.x);
     offset.rotate(sprite.angle);
-    if(VoronoiFracture.debugShowPoints)
-    {
+    if (VoronoiFracture.debugShowPoints) {
         //Debug.DrawLine(sprite.x, sprite.y, sprite.x + offset.x, sprite.y + offset.y, 5000);
-        Debug.DrawDot(sprite.x + offset.x, sprite.y + offset.y, 3, 5000);
+        Debug.DrawDot(sprite.x + offset.x, sprite.y + offset.y, 1.5, 5000);
     }
     s.anchor.set((cell.seed.y - cell.minX) / (cell.maxX - cell.minX + 1), (cell.seed.x - cell.minY) / (cell.maxY - cell.minY + 1));
     s.angle = sprite.angle;
@@ -194,8 +199,7 @@ function RandomColor() {
     return 255 * 256 * 256 * 256 + r * 256 * 256 + g * 256 + b; // It's ARGB internally
 }
 
-function Grayscale(value)
-{
+function Grayscale(value) {
     value = Math.min(1, Math.max(0, (value + 1) / 2));
     let v = Math.floor(255 * value);
     return 255 * 256 * 256 * 256 + v * 256 * 256 + v * 256 + v;
