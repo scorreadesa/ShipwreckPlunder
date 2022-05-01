@@ -1,14 +1,15 @@
 VoronoiFracture = {}
 VoronoiFracture.debugShowPoints = true;
 VoronoiFracture.debugShowField = true;
-VoronoiFracture.noised = false;
+VoronoiFracture.noised = true;
 VoronoiFracture.type = 1;
+VoronoiFracture.noiseType = 1;
 VoronoiFracture.ImageBuffer = {};
 VoronoiFracture.octaves = 4;
 VoronoiFracture.scale = 0.2;
 VoronoiFracture.persistence = 0.5;
 VoronoiFracture.lacunarity = 2.1;
-VoronoiFracture.noiseImpact = 3.5;
+VoronoiFracture.noiseImpact = 2.5;
 
 VoronoiFracture.FractureSprite = FractureSprite;
 VoronoiFracture.RegisterTexture = RegisterTexture;
@@ -72,7 +73,21 @@ function FractureSprite(sprite, textureName, point, force) {
             }
 
             if (VoronoiFracture.noised && second >= 0) {
-                let value = OctaveNoise(x / width, y / height, VoronoiFracture.octaves, VoronoiFracture.scale, VoronoiFracture.persistence, VoronoiFracture.lacunarity);
+                let value;
+                if (VoronoiFracture.noiseType === 0) {
+                    value = OctaveNoise(x / width, y / height, VoronoiFracture.octaves, VoronoiFracture.scale, VoronoiFracture.persistence, VoronoiFracture.lacunarity);
+                } else if (VoronoiFracture.noiseType === 1) {
+                    let midpoint = cells[closest].seed.addPure(cells[second].seed);
+                    midpoint.scalarMultiply(0.5);
+                    let normal = new Vector2(cells[closest].seed.y - midpoint.y, -(cells[closest].seed.x - midpoint.x));
+                    let t0 = normal.dot(new Vector2(x - midpoint.x, y - midpoint.y)) / normal.dot(normal);
+                    normal.scalarMultiply(t0);
+                    midpoint.add(normal);
+                    value = OctaveNoise(midpoint.x / width, midpoint.y / height, VoronoiFracture.octaves, VoronoiFracture.scale, VoronoiFracture.persistence, VoronoiFracture.lacunarity);
+                    let distance = Distance(midpoint.x, midpoint.y, x, y);
+                    value = Math.min(distance, Math.abs(value)) * Math.sign(value);
+                }
+
                 dist += value * VoronoiFracture.noiseImpact * sprite.scale.x; // Assuming uniformly scaled sprites
                 distSecond -= value * VoronoiFracture.noiseImpact * sprite.scale.x;
                 if (distSecond < dist) {
@@ -117,7 +132,7 @@ function FractureSprite(sprite, textureName, point, force) {
         setTimeout(() => {
             Game.PIXIApp.stage.removeChild(s);
             s.destroy(true);
-        }, 5000)
+        }, 50000)
     }
 
     cells.forEach((cell) => {
@@ -171,8 +186,7 @@ function RandomPoints(width, height, amount) {
     return cells;
 }
 
-function ShatterPoints(width, height, amount, point)
-{
+function ShatterPoints(width, height, amount, point) {
     let cells = [];
     let radius = Math.max(width, height) * 0.5;
     let innerRatio = 0.75;
@@ -180,8 +194,7 @@ function ShatterPoints(width, height, amount, point)
     let innerCells = Math.floor(amount / 2);
     let angle = 0;
 
-    while (angle < 360)
-    {
+    while (angle < 360) {
         let vector = new Vector2(0, 1);
         angle += (360 / innerCells) * 0.5 + (360 / innerCells) * 0.5 * (Math.random() * 2);
         vector.rotate(angle);
@@ -191,13 +204,12 @@ function ShatterPoints(width, height, amount, point)
         amount--;
     }
 
-    while(amount > 0)
-    {
+    while (amount > 0) {
         let vector = new Vector2(0, 1);
         vector.rotate(Math.random() * 360);
         vector.scalarMultiply(innerRing + radius * Math.random());
         vector.add(point);
-        if(vector.x < 0 || vector.y < 0 || vector.x > width || vector.y > height) {
+        if (vector.x < 0 || vector.y < 0 || vector.x > width || vector.y > height) {
             continue;
         }
         cells.push(new VoronoiCell(vector.x, vector.y, RandomColor()));

@@ -75,6 +75,7 @@ function Setup() {
     CreatePlayer();
     //CreateForces();
     let ship = new ShipPart(500, 200);
+    VoronoiFracture.FractureSprite(ship.sprite, "ship2", new Vector2(500, 200), 0)
 }
 
 function CreatePlayer() {
