@@ -36,18 +36,14 @@ function FractureSprite(sprite, textureName, point, force) {
 
     noise.seed(Math.random());
 
-    let offset = new Vector2(point.x - sprite.x, point.y - sprite.y);
-    offset.scalarMultiply(1 / sprite.scale.x);
-    offset.rotate(-sprite.angle);
-
-    point.x = offset.x + width / 2;
-    point.y = offset.y + height / 2;
-
     if (VoronoiFracture.type === 0) {
         cells = RandomPoints(width, height, 15);
         center = new Vector2(sprite.x, sprite.y);
     } else if (VoronoiFracture.type === 1) {
-        cells = ShatterPoints(width, height, 25, point);
+        let offset = new Vector2(point.x - sprite.x, point.y - sprite.y);
+        offset.scalarMultiply(1 / sprite.scale.x);
+        offset.rotate(-sprite.angle);
+        cells = ShatterPoints(width, height, 25, new Vector2(offset.x + width / 2, offset.y + height / 2));
         center = point;
     }
 

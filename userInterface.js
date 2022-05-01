@@ -11,6 +11,7 @@ UI.ApplyPaths = ApplyPaths;
 UI.ApplyFractureDebugPoints = ApplyFractureDebugPoints;
 UI.ApplyFractureDebugField = ApplyFractureDebugField;
 UI.ApplyNoised = ApplyNoised;
+UI.ApplyFractureType = ApplyFractureType;
 
 UI.Elements = {};
 
@@ -26,6 +27,7 @@ function Init() {
     UI.Elements.noised = document.getElementById("noised");
     UI.Elements.centers = document.getElementById("centers");
     UI.Elements.cells = document.getElementById("cells");
+    UI.Elements.type = document.getElementById("type");
 
     UI.Elements.tps.value = Game.simulationTPS;
     UI.Elements.fps.value = Game.renderFPS;
@@ -37,6 +39,7 @@ function Init() {
     UI.Elements.noised.checked = VoronoiFracture.noised;
     UI.Elements.centers.checked = VoronoiFracture.debugShowPoints;
     UI.Elements.cells.checked = VoronoiFracture.debugShowField;
+    UI.Elements.type.value = VoronoiFracture.type;
 }
 
 function UpdateInterface() {
@@ -89,4 +92,8 @@ function ApplyFractureDebugField() {
 
 function ApplyNoised() {
     VoronoiFracture.noised = UI.Elements.noised.checked;
+}
+
+function ApplyFractureType() {
+    VoronoiFracture.type = parseInt(UI.Elements.type.value);
 }

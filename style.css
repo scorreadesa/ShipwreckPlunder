@@ -20,6 +20,12 @@ body {
     width: 40px;
 }
 
+.checkbox {
+    margin-top: 0;
+    margin-bottom: 0;
+    vertical-align: middle;
+}
+
 .sidebar-entry {
     padding-bottom: 2px;
 }

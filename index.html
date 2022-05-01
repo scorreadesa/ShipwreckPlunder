@@ -30,7 +30,7 @@
         </div>
         <div class="sidebar-entry">
             <label for="deltas">Stable Deltas: </label>
-            <input id="deltas" type="checkbox" onchange="UI.ApplyDeltas()">
+            <input id="deltas" type="checkbox" class="checkbox"  onchange="UI.ApplyDeltas()">
         </div>
 
         <h1>Particle Dynamics</h1>
@@ -41,29 +41,37 @@
         </div>
         <div class="sidebar-entry">
             <label for="euler">Use Euler Solver: </label>
-            <input id="euler" type="checkbox" onchange="UI.ApplyEuler()">
+            <input id="euler" type="checkbox" class="checkbox" onchange="UI.ApplyEuler()">
         </div>
         <div class="sidebar-entry">
             <label for="lines">Force Lines: </label>
-            <input id="lines" type="checkbox" onchange="UI.ApplyForceLines()">
+            <input id="lines" type="checkbox" class="checkbox" onchange="UI.ApplyForceLines()">
         </div>
         <div class="sidebar-entry">
             <label for="paths">Particle Paths: </label>
-            <input id="paths" type="checkbox" onchange="UI.ApplyPaths()">
+            <input id="paths" type="checkbox" class="checkbox" onchange="UI.ApplyPaths()">
         </div>
 
         <h1>Voronoi Fracture</h1>
         <div class="sidebar-entry">
             <label for="noised">Noised: </label>
-            <input id="noised" type="checkbox" onchange="UI.ApplyNoised()">
+            <input id="noised" type="checkbox" class="checkbox" onchange="UI.ApplyNoised()">
+        </div>
+
+        <div class="sidebar-entry">
+            <label for="type">Fracture Type: </label>
+            <select id="type" onchange="UI.ApplyFractureType()">
+                <option value=0>Random</option>
+                <option value=1>Glass-Like</option>
+            </select>
         </div>
         <div class="sidebar-entry">
             <label for="centers">Seed Points: </label>
-            <input id="centers" type="checkbox" onchange="UI.ApplyFractureDebugPoints()">
+            <input id="centers" type="checkbox" class="checkbox" onchange="UI.ApplyFractureDebugPoints()">
         </div>
         <div class="sidebar-entry">
             <label for="cells">Voronoi Cells: </label>
-            <input id="cells" type="checkbox" onchange="UI.ApplyFractureDebugField()">
+            <input id="cells" type="checkbox" class="checkbox" onchange="UI.ApplyFractureDebugField()">
         </div>
         <!--<p>Score:</p>
         <p>Health:</p>
