@@ -74,7 +74,7 @@ function Setup() {
 
     CreatePlayer();
     //CreateForces();
-    let ship = new ShipPart(500, 100);
+    let ship = new ShipPart(500, 200);
 }
 
 function CreatePlayer() {
@@ -185,7 +185,7 @@ function GetCollidingObjects(obj) {
         if(distance < object.collisionRadius + obj.collisionRadius)
         {
             objects.push(object);
-            Debug.DrawDot(object.sprite.x, object.sprite.y, object.collisionRadius, 1000);
+            //Debug.DrawDot(object.sprite.x, object.sprite.y, object.collisionRadius, 1000);
         }
     });
     return objects;

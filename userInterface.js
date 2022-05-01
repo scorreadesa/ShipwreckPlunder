@@ -34,9 +34,9 @@ function Init() {
     UI.Elements.euler.checked = ParticleDynamics.eulerSolver;
     UI.Elements.lines.checked = ParticleDynamics.debugLinesEnabled;
     UI.Elements.paths.checked = ParticleDynamics.debugPathsEnabled;
-    UI.Elements.paths.noised = VoronoiFracture.noised;
-    UI.Elements.paths.centers = VoronoiFracture.debugShowPoints;
-    UI.Elements.paths.cells = VoronoiFracture.debugShowField;
+    UI.Elements.noised.checked = VoronoiFracture.noised;
+    UI.Elements.centers.checked = VoronoiFracture.debugShowPoints;
+    UI.Elements.cells.checked = VoronoiFracture.debugShowField;
 }
 
 function UpdateInterface() {
@@ -80,13 +80,13 @@ function ApplyPaths() {
 }
 
 function ApplyFractureDebugPoints() {
-
+    VoronoiFracture.debugShowPoints = UI.Elements.centers.checked;
 }
 
 function ApplyFractureDebugField() {
-
+    VoronoiFracture.debugShowField = UI.Elements.cells.checked;
 }
 
 function ApplyNoised() {
-
+    VoronoiFracture.noised = UI.Elements.noised.checked;
 }

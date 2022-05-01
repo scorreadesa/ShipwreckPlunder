@@ -4,7 +4,7 @@ class GameObject {
         this.sprite.x = x;
         this.sprite.y = y;
         this.collisionRadius = collisionRadius;
-        Debug.DrawDot(x, y, collisionRadius, 1000);
+        //Debug.DrawDot(x, y, collisionRadius, 1000);
         Game.PIXIApp.stage.addChild(this.sprite);
         Game.Objects.push(this);
     }
@@ -88,7 +88,7 @@ class Cannonball extends GameObject {
                 if (!object.hasOwnProperty("fragmentable")) {
                     return;
                 }
-                object.fragment(0, 0);
+                object.fragment(new Vector2(this.sprite.x, this.sprite.y));
             })
             this.destroy();
         }
@@ -118,15 +118,16 @@ class Plank extends GameObject {
 
 class ShipPart extends GameObject {
     constructor(x, y) {
-        super(x, y, new PIXI.Sprite(Game.Resources.ship2.texture), 135);
-        this.sprite.scale.set(0.7);
-        this.sprite.angle = 0;
+        let scale = 0.7;
+        super(x, y, new PIXI.Sprite(Game.Resources.ship2.texture), 195 * scale);
+        this.sprite.scale.set(scale);
+        this.sprite.angle = 42;
         this.sprite.anchor.set(0.5);
         this.fragmentable = true;
     }
 
-    fragment(x, y) {
-        VoronoiFracture.FractureSprite(this.sprite, "ship2");
+    fragment(point) {
+        VoronoiFracture.FractureSprite(this.sprite, "ship2", point, 25);
         this.destroy();
     }
 }

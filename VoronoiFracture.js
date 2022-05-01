@@ -2,7 +2,7 @@ VoronoiFracture = {}
 VoronoiFracture.debugShowPoints = true;
 VoronoiFracture.debugShowField = true;
 VoronoiFracture.noised = false;
-VoronoiFracture.type = 0;
+VoronoiFracture.type = 1;
 VoronoiFracture.ImageBuffer = {};
 VoronoiFracture.octaves = 4;
 VoronoiFracture.scale = 0.2;
@@ -26,19 +26,29 @@ function RegisterTexture(name, path) {
     })
 }
 
-function FractureSprite(sprite, textureName) {
+function FractureSprite(sprite, textureName, point, force) {
     let time = window.performance.now();
     let data = VoronoiFracture.ImageBuffer[textureName];
     let width = data.data.width; //sprite.width;
     let height = data.data.height; //sprite.height;
     let cells;
+    let center;
 
     noise.seed(Math.random());
 
-    if (VoronoiFracture.type === 0) {
-        cells = RandomPoints(width, height,15);
-    } else if (VoronoiFracture.type === 1) {
+    let offset = new Vector2(point.x - sprite.x, point.y - sprite.y);
+    offset.scalarMultiply(1 / sprite.scale.x);
+    offset.rotate(-sprite.angle);
 
+    point.x = offset.x + width / 2;
+    point.y = offset.y + height / 2;
+
+    if (VoronoiFracture.type === 0) {
+        cells = RandomPoints(width, height, 15);
+        center = new Vector2(sprite.x, sprite.y);
+    } else if (VoronoiFracture.type === 1) {
+        cells = ShatterPoints(width, height, 25, point);
+        center = point;
     }
 
     let init = window.performance.now() - time;
@@ -115,7 +125,37 @@ function FractureSprite(sprite, textureName) {
     }
 
     cells.forEach((cell) => {
-        CreateFragment(cell, sprite, width, height);
+        if (cell.pixels.length === 0) {
+            return;
+        }
+
+        let s = SpriteFromPixels(cell.pixels, cell.maxX - cell.minX + 1, cell.maxY - cell.minY + 1);
+        let offset = new Vector2(cell.seed.x - width / 2, cell.seed.y - height / 2);
+        offset.scalarMultiply(sprite.scale.x);
+        offset.rotate(sprite.angle);
+
+        if (VoronoiFracture.debugShowPoints) {
+            //Debug.DrawLine(sprite.x, sprite.y, sprite.x + offset.x, sprite.y + offset.y, 5000);
+            Debug.DrawDot(sprite.x + offset.x, sprite.y + offset.y, 1.5, 50000);
+        }
+        s.anchor.set((cell.seed.x - cell.minX) / (cell.maxX - cell.minX + 1), (cell.seed.y - cell.minY) / (cell.maxY - cell.minY + 1));
+        s.angle = sprite.angle;
+        s.scale = sprite.scale;
+
+        let x = sprite.x + offset.x;
+        let y = sprite.y + offset.y;
+        let fade = 5;
+
+        let frag = new Fragment(x, y, s, fade);
+
+        let forceVector = new Vector2(x - center.x, y - center.y);
+        forceVector.normalize();
+        forceVector.scalarMultiply(force);
+        frag.particle.vel = forceVector;
+
+        setTimeout(() => {
+            frag.destroy();
+        }, fade * 1000);
     })
 
     let sprites = window.performance.now() - time;
@@ -131,6 +171,41 @@ function RandomPoints(width, height, amount) {
     let cells = [];
     for (let i = 0; i < amount; i++) {
         cells.push(new VoronoiCell(Math.random() * height, Math.random() * width, RandomColor()));
+    }
+    return cells;
+}
+
+function ShatterPoints(width, height, amount, point)
+{
+    let cells = [];
+    let radius = Math.max(width, height) * 0.5;
+    let innerRatio = 0.75;
+    let innerRing = radius * innerRatio;
+    let innerCells = Math.floor(amount / 2);
+    let angle = 0;
+
+    while (angle < 360)
+    {
+        let vector = new Vector2(0, 1);
+        angle += (360 / innerCells) * 0.5 + (360 / innerCells) * 0.5 * (Math.random() * 2);
+        vector.rotate(angle);
+        vector.scalarMultiply(innerRing);
+        vector.add(point);
+        cells.push(new VoronoiCell(vector.x, vector.y, RandomColor()));
+        amount--;
+    }
+
+    while(amount > 0)
+    {
+        let vector = new Vector2(0, 1);
+        vector.rotate(Math.random() * 360);
+        vector.scalarMultiply(innerRing + radius * Math.random());
+        vector.add(point);
+        if(vector.x < 0 || vector.y < 0 || vector.x > width || vector.y > height) {
+            continue;
+        }
+        cells.push(new VoronoiCell(vector.x, vector.y, RandomColor()));
+        amount--;
     }
     return cells;
 }
@@ -154,33 +229,6 @@ function OctaveNoise(x, y, octaves, scale, persistence, lacunarity) {
     }
 
     return cumulative;
-}
-
-function CreateFragment(cell, sprite, width, height) {
-    if (cell.pixels.length === 0) {
-        return;
-    }
-    let s = SpriteFromPixels(cell.pixels, cell.maxX - cell.minX + 1, cell.maxY - cell.minY + 1);
-    let offset = new Vector2(cell.seed.x - width / 2, cell.seed.y - height / 2);
-    offset.scalarMultiply(sprite.scale.x);
-    offset.rotate(sprite.angle);
-    if (VoronoiFracture.debugShowPoints) {
-        //Debug.DrawLine(sprite.x, sprite.y, sprite.x + offset.x, sprite.y + offset.y, 5000);
-        Debug.DrawDot(sprite.x + offset.x, sprite.y + offset.y, 1.5, 5000);
-    }
-    s.anchor.set((cell.seed.y - cell.minX) / (cell.maxX - cell.minX + 1), (cell.seed.x - cell.minY) / (cell.maxY - cell.minY + 1));
-    s.angle = sprite.angle;
-    s.scale = sprite.scale;
-    let offset2 = new Vector2(cell.seed.y - width / 2, cell.seed.x - height / 2);
-    offset2.scalarMultiply(sprite.scale.x)
-    offset2.rotate(sprite.angle);
-    let x = sprite.x + offset2.x;
-    let y = sprite.y + offset2.y;
-    let fade = 5;
-    let frag = new Fragment(x, y, s, fade);
-    setTimeout(() => {
-        frag.destroy();
-    }, fade * 1000);
 }
 
 function SpriteFromPixels(pixels, width, height) {
