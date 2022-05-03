@@ -1,6 +1,6 @@
 VoronoiFracture = {}
-VoronoiFracture.debugShowPoints = true;
-VoronoiFracture.debugShowField = true;
+VoronoiFracture.debugShowPoints = false;
+VoronoiFracture.debugShowField = false;
 VoronoiFracture.noised = true;
 VoronoiFracture.type = 1;
 VoronoiFracture.noiseType = 1;
@@ -10,6 +10,8 @@ VoronoiFracture.scale = 0.2;
 VoronoiFracture.persistence = 0.5;
 VoronoiFracture.lacunarity = 2.1;
 VoronoiFracture.noiseImpact = 2.5;
+
+VoronoiFracture.debugPersistence = 5000;
 
 VoronoiFracture.FractureSprite = FractureSprite;
 VoronoiFracture.RegisterTexture = RegisterTexture;
@@ -97,6 +99,7 @@ function FractureSprite(sprite, textureName, point, force) {
 
             cells[closest].updateBounds(x, y);
             if (VoronoiFracture.debugShowField) {
+                //pixels.push(Grayscale(dist % 1));
                 pixels.push(cells[closest].color);
                 //pixels.push(Grayscale(OctaveNoise(x / width, y / height, 3, 0.1, 0.5, 2.1) * 0.5));
             }
@@ -132,7 +135,7 @@ function FractureSprite(sprite, textureName, point, force) {
         setTimeout(() => {
             Game.PIXIApp.stage.removeChild(s);
             s.destroy(true);
-        }, 50000)
+        }, VoronoiFracture.debugPersistence)
     }
 
     cells.forEach((cell) => {
@@ -147,7 +150,7 @@ function FractureSprite(sprite, textureName, point, force) {
 
         if (VoronoiFracture.debugShowPoints) {
             //Debug.DrawLine(sprite.x, sprite.y, sprite.x + offset.x, sprite.y + offset.y, 5000);
-            Debug.DrawDot(sprite.x + offset.x, sprite.y + offset.y, 1.5, 50000);
+            Debug.DrawDot(sprite.x + offset.x, sprite.y + offset.y, 1.5, VoronoiFracture.debugPersistence);
         }
         s.anchor.set((cell.seed.x - cell.minX) / (cell.maxX - cell.minX + 1), (cell.seed.y - cell.minY) / (cell.maxY - cell.minY + 1));
         s.angle = sprite.angle;
@@ -155,18 +158,13 @@ function FractureSprite(sprite, textureName, point, force) {
 
         let x = sprite.x + offset.x;
         let y = sprite.y + offset.y;
-        let fade = 5;
 
-        let frag = new Fragment(x, y, s, fade);
+        let frag = new Fragment(x, y, s, VoronoiFracture.debugPersistence / 1000);
 
         let forceVector = new Vector2(x - center.x, y - center.y);
         forceVector.normalize();
         forceVector.scalarMultiply(force);
         frag.particle.vel = forceVector;
-
-        setTimeout(() => {
-            frag.destroy();
-        }, fade * 1000);
     })
 
     let sprites = window.performance.now() - time;
@@ -263,6 +261,31 @@ function Grayscale(value) {
 
 //////////
 // Classes
+
+class Fragment extends GameObject {
+    constructor(x, y, sprite, fade) {
+        super(x, y, sprite, 0);
+        this.fade = fade;
+        this.currentFade = fade;
+        this.particle = new Particle(x, y, 1, false); // TODO: Calculate mass based on pixels if needed
+    }
+
+    update(delta) {
+        ParticleDynamics.UpdateParticle(this.particle, delta);
+        this.sprite.x = this.particle.pos.x;
+        this.sprite.y = this.particle.pos.y;
+        this.currentFade -= delta;
+        this.sprite.alpha = this.currentFade / this.fade;
+        if (this.fade < 0) {
+            this.destroy();
+        }
+    }
+
+    destroy() {
+        super.destroy();
+        this.sprite.destroy(true); // Destroys texture too
+    }
+}
 
 class VoronoiCell {
     constructor(x, y, color) {

@@ -11,6 +11,7 @@ Game.renderFPS = 60;
 Game.simulationInterval = undefined;
 Game.lastTimestamp = -1;
 Game.useStableDeltas = true; // If false uses exact high-res clock to calculate deltas, if true uses 1/TPS. Eliminates debug line flickering if enabled.
+Game.paused = false;
 
 Game.cannonCooldown = 1;
 
@@ -31,6 +32,12 @@ Game.SetSimulationTPS = SetSimulationTPS;
 Game.SetRenderFPS = SetRenderFPS;
 Game.SetStableDeltas = SetStableDeltas;
 Game.GetCollidingObjects = GetCollidingObjects;
+Game.Pause = Pause;
+Game.Unpause = Unpause;
+Game.Step = Step;
+Game.CreateVortex = CreateVortex;
+Game.CreateShipPart = CreateShipPart;
+Game.CreatePlank = CreatePlank;
 
 function Init() {
     PIXI.settings.ANISOTROPIC_LEVEL = 16;
@@ -50,7 +57,9 @@ function LoadAssets() {
 
     Game.PIXIApp.ticker.minFPS = 0;
     Game.PIXIApp.ticker.maxFPS = Game.renderFPS;
-    Game.SetSimulationTPS(Game.simulationTPS);
+    if (!Game.paused) {
+        Game.SetSimulationTPS(Game.simulationTPS);
+    }
 
     Game.PIXIApp.stage.interactive = true;
     Game.PIXIApp.stage.on("mousemove", (event) => {
@@ -65,17 +74,14 @@ function LoadAssets() {
     loader.add("cannonball", "assets/cannonball.png");
     loader.add("plank", "assets/plank.png");
     loader.add("ship2", "assets/ship2w.png");
+    loader.add("barrel", "assets/barrel.png");
     loader.load(Setup);
 }
 
 function Setup() {
     ParticleDynamics.Forces.push(new DragForce(0.5));
     ParticleDynamics.Forces.push(new PlayerMovementForce());
-
     CreatePlayer();
-    //CreateForces();
-    let ship = new ShipPart(500, 200);
-    VoronoiFracture.FractureSprite(ship.sprite, "ship2", new Vector2(500, 200), 0)
 }
 
 function CreatePlayer() {
@@ -93,18 +99,16 @@ function CreatePlayer() {
     }
 }
 
-function CreateForces() {
-    const power = 20;
-    const size = 100;
-    const amount = 5;
-    const vel = 75;
+function CreateVortex() {
+    new Vortex(Math.random() * Game.width, Math.random() * Game.height);
+}
 
-    for (let i = 0; i < amount; i++) {
-        let force = new RadialForce(Math.random() * Game.width, Math.random() * Game.height, power, size);
-        ParticleDynamics.Forces.push(force);
-        Game.Forces.push(force);
-        Game.Motion.push(new Vector2(Math.random() * vel - vel / 2, Math.random() * vel - vel / 2));
-    }//*/
+function CreateShipPart() {
+    new ShipPart(200, 500);
+}
+
+function CreatePlank() {
+    new Plank(Math.random() * Game.width, Math.random() * Game.height);
 }
 
 function Tick() {
@@ -145,12 +149,15 @@ function SimulationUpdate(delta) {
 }
 
 function SetSimulationTPS(tps) {
+    Game.simulationTPS = tps;
+    if (Game.paused) {
+        return; // Enables setting of step interval while paused without restarting simulation
+    }
     if (Game.simulationInterval !== undefined) {
         clearInterval(Game.simulationInterval);
     }
     let millis = 1000 / tps;
     Game.simulationInterval = setInterval(Tick, millis);
-    Game.simulationTPS = tps;
 }
 
 function SetStableDeltas(stable) {
@@ -165,26 +172,40 @@ function SetRenderFPS(fps) {
     Game.PIXIApp.ticker.maxFPS = fps;
 }
 
+function Pause() {
+    Game.paused = true;
+    if (Game.simulationInterval !== undefined) {
+        clearInterval(Game.simulationInterval);
+    }
+}
+
+function Unpause() {
+    Game.paused = false;
+    Game.lastTimestamp = -1;
+    SetSimulationTPS(Game.simulationTPS);
+}
+
+function Step() {
+    Game.lastTimestamp = -1;
+    Tick();
+}
+
 function GetCollidingObjects(obj) {
-    if(obj.collisionRadius <= 0)
-    {
+    if (obj.collisionRadius <= 0) {
         return;
     }
     let objects = [];
     Game.Objects.forEach((object) => {
-        if(object.collisionRadius <= 0)
-        {
+        if (object.collisionRadius <= 0) {
             return;
         }
-        if(object === obj)
-        {
+        if (object === obj) {
             return;
         }
         let xDelta = object.sprite.x - obj.sprite.x;
         let yDelta = object.sprite.y - obj.sprite.y;
         let distance = Math.sqrt(xDelta * xDelta + yDelta * yDelta);
-        if(distance < object.collisionRadius + obj.collisionRadius)
-        {
+        if (distance < object.collisionRadius + obj.collisionRadius) {
             objects.push(object);
             //Debug.DrawDot(object.sprite.x, object.sprite.y, object.collisionRadius, 1000);
         }

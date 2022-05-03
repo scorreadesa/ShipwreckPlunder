@@ -13,6 +13,8 @@ UI.ApplyFractureDebugField = ApplyFractureDebugField;
 UI.ApplyNoised = ApplyNoised;
 UI.ApplyFractureType = ApplyFractureType;
 UI.ApplyNoiseType = ApplyNoiseType;
+UI.TogglePause = TogglePause;
+UI.Step = Step;
 
 UI.Elements = {};
 
@@ -30,6 +32,8 @@ function Init() {
     UI.Elements.cells = document.getElementById("cells");
     UI.Elements.type = document.getElementById("type");
     UI.Elements.noiseType = document.getElementById("noiseType");
+    UI.Elements.pause = document.getElementById("pause");
+    UI.Elements.step = document.getElementById("step");
 
     UI.Elements.tps.value = Game.simulationTPS;
     UI.Elements.fps.value = Game.renderFPS;
@@ -43,6 +47,8 @@ function Init() {
     UI.Elements.cells.checked = VoronoiFracture.debugShowField;
     UI.Elements.type.value = VoronoiFracture.type;
     UI.Elements.noiseType.value = VoronoiFracture.noiseType;
+    UI.Elements.pause.innerText = Game.paused ? "Unpause" : "Pause";
+    UI.Elements.step.disabled = !Game.paused;
 }
 
 function UpdateInterface() {
@@ -103,4 +109,20 @@ function ApplyFractureType() {
 
 function ApplyNoiseType() {
     VoronoiFracture.noiseType = parseInt(UI.Elements.noiseType.value);
+}
+
+function TogglePause() {
+    if (Game.paused) {
+        Game.Unpause();
+        UI.Elements.pause.innerText = "Pause";
+        UI.Elements.step.disabled = true;
+    } else {
+        Game.Pause();
+        UI.Elements.pause.innerText = "Unpause";
+        UI.Elements.step.disabled = false;
+    }
+}
+
+function Step() {
+    Game.Step();
 }

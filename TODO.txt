@@ -15,9 +15,6 @@ Path Interpolation:
     Vortex/enemies follow path interpolation.
 
 Voronoi Fracture:
-    Add configuration options to UI.
-    Add impact-dependent scattering patterns.
-    Properly apply rotation.
     Maybe optimize, maybe slap the expensive fracturing and cell processing into a web worker.
 
 Motion Blur:

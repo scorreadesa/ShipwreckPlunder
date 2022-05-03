@@ -10,8 +10,8 @@ body {
 
 .ui {
     text-align: justify;
-    padding-left: 1%;
-    padding-right: 5%;
+    padding-left: 10px;
+    padding-right: 10px;
     border-style: solid;
     border-left: transparent;
 }

@@ -82,15 +82,18 @@ class Cannonball extends GameObject {
         }
 
         let objects = Game.GetCollidingObjects(this);
-        if(objects.length > 0)
-        {
+        if (objects.length > 0) {
+            let consumed = false;
             objects.forEach((object) => {
                 if (!object.hasOwnProperty("fragmentable")) {
                     return;
                 }
+                consumed = true;
                 object.fragment(new Vector2(this.sprite.x, this.sprite.y));
             })
-            this.destroy();
+            if (consumed) {
+                this.destroy();
+            }
         }
     }
 }
@@ -128,28 +131,47 @@ class ShipPart extends GameObject {
 
     fragment(point) {
         VoronoiFracture.FractureSprite(this.sprite, "ship2", point, 25);
-        this.destroy();
+        super.destroy();
     }
 }
 
-class Fragment extends GameObject {
-    constructor(x, y, sprite, fade) {
-        super(x, y, sprite, 0);
-        this.fade = fade;
-        this.currentFade = fade;
-        this.particle = new Particle(x, y, 0.1, false); // TODO: Calculate mass based on pixels if needed
+class Vortex extends GameObject {
+    constructor(x, y) {
+        let scale = 1;
+        super(x, y, new PIXI.Sprite(Game.Resources.barrel.texture), 75 * scale);
+        this.sprite.scale.set(scale);
+        this.sprite.anchor.set(0.5);
+        this.force = new RadialForce(x, y, 20, 100);
+        ParticleDynamics.Forces.push(this.force);
+        let vel = 75;
+        this.motion = new Vector2((Math.random() * 2 - 1) * vel, (Math.random() * 2 - 1) * vel)
     }
 
     update(delta) {
-        ParticleDynamics.UpdateParticle(this.particle, delta);
-        this.sprite.x = this.particle.pos.x;
-        this.sprite.y = this.particle.pos.y;
-        this.currentFade -= delta;
-        this.sprite.alpha = this.currentFade / this.fade;
+        this.sprite.angle += 20 * delta;
+        this.force.center.x += this.motion.x * delta;
+        this.force.center.y += this.motion.y * delta;
+
+        if (this.force.center.x < 0) {
+            this.force.center.x += Game.width;
+        } else if (this.force.center.x > Game.width) {
+            this.force.center.x -= Game.width;
+        }
+
+        if (this.force.center.y < 0) {
+            this.force.center.y += Game.height;
+        } else if (this.force.center.y > Game.height) {
+            this.force.center.y -= Game.height;
+        }
+
+        this.sprite.x = this.force.center.x;
+        this.sprite.y = this.force.center.y;
     }
 
     destroy() {
         super.destroy();
-        this.sprite.destroy(true); // Destroys texture too
+        ParticleDynamics.Forces.filter((obj) => {
+            return obj !== this.force
+        });
     }
 }
