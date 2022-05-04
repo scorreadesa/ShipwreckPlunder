@@ -23,11 +23,11 @@ class GameObject {
 
 class Player extends GameObject {
     constructor(x, y) {
-        super(x, y, new PIXI.Sprite(Game.Resources.player.texture), 55);
+        super(x, y, new PIXI.Sprite(Game.Resources.player.texture), 50);
         this.particle = new Particle(x, y, 1, true);
         this.particle.isPlayer = true;
         this.sprite.scale.set(0.5);
-        this.sprite.anchor.set(0.5);
+        this.sprite.anchor.set(0.408, 0.5);
         this.sprite.zIndex = 999;
 
         this.cannonCooldown = 0;
@@ -121,10 +121,10 @@ class Plank extends GameObject {
 
 class ShipPart extends GameObject {
     constructor(x, y) {
-        let scale = 0.7;
+        let scale = 1;
         super(x, y, new PIXI.Sprite(Game.Resources.ship2.texture), 195 * scale);
         this.sprite.scale.set(scale);
-        this.sprite.angle = 42;
+        this.sprite.angle = 0;
         this.sprite.anchor.set(0.5);
         this.fragmentable = true;
     }
@@ -137,8 +137,8 @@ class ShipPart extends GameObject {
 
 class Vortex extends GameObject {
     constructor(x, y) {
-        let scale = 1;
-        super(x, y, new PIXI.Sprite(Game.Resources.barrel.texture), 75 * scale);
+        let scale = 0.5;
+        super(x, y, new PIXI.Sprite(Game.Resources.vortex.texture), 75 * scale);
         this.sprite.scale.set(scale);
         this.sprite.anchor.set(0.5);
         this.force = new RadialForce(x, y, 20, 100);
@@ -148,7 +148,7 @@ class Vortex extends GameObject {
     }
 
     update(delta) {
-        this.sprite.angle += 20 * delta;
+        this.sprite.angle += -90 * delta;
         this.force.center.x += this.motion.x * delta;
         this.force.center.y += this.motion.y * delta;
 

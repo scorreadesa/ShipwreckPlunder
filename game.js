@@ -48,6 +48,7 @@ function Init() {
     UI.Init();
     LoadAssets();
     ParticleDynamics.Init();
+    VoronoiFracture.Init();
 }
 
 function LoadAssets() {
@@ -75,6 +76,7 @@ function LoadAssets() {
     loader.add("plank", "assets/plank.png");
     loader.add("ship2", "assets/ship2w.png");
     loader.add("barrel", "assets/barrel.png");
+    loader.add("vortex", "assets/vortex.png");
     loader.load(Setup);
 }
 
@@ -104,7 +106,7 @@ function CreateVortex() {
 }
 
 function CreateShipPart() {
-    new ShipPart(200, 500);
+    new ShipPart(250, 250);
 }
 
 function CreatePlank() {

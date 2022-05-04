@@ -153,8 +153,6 @@ class Particle {
         this.vel = new Vector2(0, 0);
         this.force = new Vector2(0, 0);
         this.mass = mass;
-        // For field lines only
-        this.lastFrameForce = new Vector2(0, 0);
         this.tracked = tracked;
         this.tracking = false;
         this.isPlayer = false;

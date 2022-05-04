@@ -78,7 +78,7 @@
 
         <div class="sidebar-entry">
             <label for="noiseType">Noise Type: </label>
-            <select id="noiseType" onchange="UI.ApplyFractureType()">
+            <select id="noiseType" onchange="UI.ApplyNoiseType()">
                 <option value=0>Simple</option>
                 <option value=1>Continuous</option>
             </select>
@@ -90,7 +90,7 @@
         </div>
         <div class="sidebar-entry">
             <label for="cells">Voronoi Cells: </label>
-            <input id="cells" type="checkbox" class="checkbox" onchange="UI.ApplyNoiseType()">
+            <input id="cells" type="checkbox" class="checkbox" onchange="UI.ApplyFractureDebugField()">
         </div>
         <!--<p>Score:</p>
         <p>Health:</p>

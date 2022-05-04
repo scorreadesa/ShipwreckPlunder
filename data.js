@@ -4,6 +4,10 @@ class Vector2 {
         this.y = y;
     }
 
+    clone() {
+        return new Vector2(this.x, this.y);
+    }
+
     magnitude() {
         return Math.sqrt(this.x * this.x + this.y * this.y);
     }

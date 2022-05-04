@@ -1,20 +1,26 @@
 VoronoiFracture = {}
-VoronoiFracture.debugShowPoints = false;
-VoronoiFracture.debugShowField = false;
+VoronoiFracture.debugShowPoints = true;
+VoronoiFracture.debugShowField = true;
 VoronoiFracture.noised = true;
-VoronoiFracture.type = 1;
+VoronoiFracture.type = 0;
 VoronoiFracture.noiseType = 1;
+VoronoiFracture.partialField = false;
 VoronoiFracture.ImageBuffer = {};
 VoronoiFracture.octaves = 4;
 VoronoiFracture.scale = 0.2;
 VoronoiFracture.persistence = 0.5;
 VoronoiFracture.lacunarity = 2.1;
-VoronoiFracture.noiseImpact = 2.5;
+VoronoiFracture.noiseImpact = 3.5;
 
-VoronoiFracture.debugPersistence = 5000;
+VoronoiFracture.debugPersistence = 50000;
 
+VoronoiFracture.Init = Init;
 VoronoiFracture.FractureSprite = FractureSprite;
 VoronoiFracture.RegisterTexture = RegisterTexture;
+
+function Init() {
+
+}
 
 function RegisterTexture(name, path) {
     let img = new Image();
@@ -57,6 +63,14 @@ function FractureSprite(sprite, textureName, point, force) {
 
     for (let y = 0; y < height; y++) {
         for (let x = 0; x < width; x++) {
+            if (VoronoiFracture.partialField && data.pixel(x, y).a <= 0) {
+                indices.push(-1);
+                if (VoronoiFracture.debugShowField) {
+                    pixels.push(0);
+                }
+                continue;
+            }
+
             let closest = -1;
             let second = -1;
             let dist = Number.MAX_VALUE;
@@ -68,7 +82,7 @@ function FractureSprite(sprite, textureName, point, force) {
                     distSecond = dist;
                     closest = i;
                     dist = d;
-                } else if (d < second && d !== dist) {
+                } else if (d < distSecond && d !== dist) {
                     second = i;
                     distSecond = d;
                 }
@@ -78,20 +92,29 @@ function FractureSprite(sprite, textureName, point, force) {
                 let value;
                 if (VoronoiFracture.noiseType === 0) {
                     value = OctaveNoise(x / width, y / height, VoronoiFracture.octaves, VoronoiFracture.scale, VoronoiFracture.persistence, VoronoiFracture.lacunarity);
+                    dist += value * VoronoiFracture.noiseImpact * sprite.scale.x; // Assuming uniformly scaled sprites
+                    distSecond -= value * VoronoiFracture.noiseImpact * sprite.scale.x;
                 } else if (VoronoiFracture.noiseType === 1) {
                     let midpoint = cells[closest].seed.addPure(cells[second].seed);
                     midpoint.scalarMultiply(0.5);
                     let normal = new Vector2(cells[closest].seed.y - midpoint.y, -(cells[closest].seed.x - midpoint.x));
-                    let t0 = normal.dot(new Vector2(x - midpoint.x, y - midpoint.y)) / normal.dot(normal);
+                    normal.normalize();
+                    let t0 = normal.dot(new Vector2(x - midpoint.x, y - midpoint.y));
                     normal.scalarMultiply(t0);
-                    midpoint.add(normal);
-                    value = OctaveNoise(midpoint.x / width, midpoint.y / height, VoronoiFracture.octaves, VoronoiFracture.scale, VoronoiFracture.persistence, VoronoiFracture.lacunarity);
-                    let distance = Distance(midpoint.x, midpoint.y, x, y);
-                    value = Math.min(distance, Math.abs(value)) * Math.sign(value);
+                    let nearPoint = midpoint.addPure(normal); // Closest point on separating line
+                    value = OctaveNoise(nearPoint.x / width, nearPoint.y / height, VoronoiFracture.octaves, VoronoiFracture.scale, VoronoiFracture.persistence, VoronoiFracture.lacunarity);
+                    let nearToSample = new Vector2(x - nearPoint.x, y - nearPoint.y);
+                    nearToSample.normalize();
+                    let sample = new Vector2(x, y);
+                    value *= VoronoiFracture.noiseImpact;
+                    nearToSample.scalarMultiply(value * Math.sign(closest - second));
+                    sample.add(nearToSample);
+                    let sampleToClosest = sample.subtractPure(cells[closest].seed);
+                    let sampleToSecond = sample.subtractPure(cells[second].seed);
+                    dist = sampleToClosest.magnitude();
+                    distSecond = sampleToSecond.magnitude();
                 }
 
-                dist += value * VoronoiFracture.noiseImpact * sprite.scale.x; // Assuming uniformly scaled sprites
-                distSecond -= value * VoronoiFracture.noiseImpact * sprite.scale.x;
                 if (distSecond < dist) {
                     closest = second;
                 }
@@ -99,9 +122,8 @@ function FractureSprite(sprite, textureName, point, force) {
 
             cells[closest].updateBounds(x, y);
             if (VoronoiFracture.debugShowField) {
-                //pixels.push(Grayscale(dist % 1));
                 pixels.push(cells[closest].color);
-                //pixels.push(Grayscale(OctaveNoise(x / width, y / height, 3, 0.1, 0.5, 2.1) * 0.5));
+                //pixels.push(Grayscale(OctaveNoise(x / width, y / height, VoronoiFracture.octaves, VoronoiFracture.scale, VoronoiFracture.persistence, VoronoiFracture.lacunarity))); // Noise visualization
             }
             indices.push(closest);
         }
@@ -117,7 +139,10 @@ function FractureSprite(sprite, textureName, point, force) {
 
     for (let y = 0; y < height; y++) {
         for (let x = 0; x < width; x++) {
-            cells[indices[y * width + x]].setPixel(x, y, data.pixel(x, y).toABGR());
+            let index = indices[y * width + x];
+            if (index >= 0) {
+                cells[index].setPixel(x, y, data.pixel(x, y).toABGR());
+            }
         }
     }
 
@@ -133,7 +158,6 @@ function FractureSprite(sprite, textureName, point, force) {
         Game.PIXIApp.stage.addChild(s);
 
         setTimeout(() => {
-            Game.PIXIApp.stage.removeChild(s);
             s.destroy(true);
         }, VoronoiFracture.debugPersistence)
     }
@@ -159,7 +183,7 @@ function FractureSprite(sprite, textureName, point, force) {
         let x = sprite.x + offset.x;
         let y = sprite.y + offset.y;
 
-        let frag = new Fragment(x, y, s, VoronoiFracture.debugPersistence / 1000);
+        let frag = new Fragment(x, y, s, 1);
 
         let forceVector = new Vector2(x - center.x, y - center.y);
         forceVector.normalize();
@@ -174,6 +198,7 @@ function FractureSprite(sprite, textureName, point, force) {
     console.log("Empty " + (empty - closestt))
     console.log("Set " + (set - closestt))
     console.log("Sprites " + (sprites - set))
+    console.log("Total " + (sprites - init))
 }
 
 function RandomPoints(width, height, amount) {
@@ -233,7 +258,6 @@ function OctaveNoise(x, y, octaves, scale, persistence, lacunarity) {
         amplitude *= persistence;
         frequency *= lacunarity;
     }
-
     return cumulative;
 }
 
@@ -248,8 +272,8 @@ function SpriteFromPixels(pixels, width, height) {
 
 function RandomColor() {
     let r = Math.floor(255 * Math.random());
-    let g = Math.floor(256 * Math.random());
-    let b = Math.floor(256 * Math.random());
+    let g = Math.floor(255 * Math.random());
+    let b = Math.floor(255 * Math.random());
     return 255 * 256 * 256 * 256 + r * 256 * 256 + g * 256 + b; // It's ARGB internally
 }
 
@@ -324,7 +348,6 @@ class VoronoiCell {
     createEmptyPixels() {
         this.pixels = [];
         if (this.width() <= 0 || this.height() <= 0) {
-            console.log("Yeah")
             return;
         }
         let length = (this.width() + 1) * (this.height() + 1);
