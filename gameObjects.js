@@ -121,10 +121,10 @@ class Plank extends GameObject {
 
 class ShipPart extends GameObject {
     constructor(x, y) {
-        let scale = 1;
+        let scale = 0.7;
         super(x, y, new PIXI.Sprite(Game.Resources.ship2.texture), 195 * scale);
         this.sprite.scale.set(scale);
-        this.sprite.angle = 0;
+        this.sprite.angle = 42;
         this.sprite.anchor.set(0.5);
         this.fragmentable = true;
     }

@@ -106,7 +106,7 @@ function CreateVortex() {
 }
 
 function CreateShipPart() {
-    new ShipPart(250, 250);
+    new ShipPart(200, 500);
 }
 
 function CreatePlank() {
