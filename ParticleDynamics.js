@@ -45,7 +45,7 @@ function Euler(particle, delta, h) {
 function RungeKutta(particle, delta, h) {
     let time = 0;
     while (time < delta) {
-        // k1 is just reapplying previous frame's forces with no change. Is this correct?
+        // k1 is just reapplying previous iteration's forces with no change. Is this correct?
         let k1 = {posX: particle.vel.x, posY: particle.vel.y, velX: particle.force.x, velY: particle.force.y};
 
         let p2 = particle.clone();
@@ -87,9 +87,8 @@ function CalculateForce(particle) {
     let result = {};
     result.posX = particle.vel.x;
     result.posY = particle.vel.y;
-    // Do not factor mass in here, instead considered in the forces since some (like drag) may not be affected by mass
-    result.velX = particle.force.x;
-    result.velY = particle.force.y;
+    result.velX = particle.force.x / particle.mass;
+    result.velY = particle.force.y / particle.mass;
 
     return result;
 }
@@ -154,8 +153,6 @@ class Particle {
         this.vel = new Vector2(0, 0);
         this.force = new Vector2(0, 0);
         this.mass = mass;
-        // For field lines only
-        this.lastFrameForce = new Vector2(0, 0);
         this.tracked = tracked;
         this.tracking = false;
         this.isPlayer = false;
@@ -245,6 +242,7 @@ class FieldLine extends PIXI.Graphics {
         super()
         this.posX = x;
         this.posY = y;
+        this.zIndex = 10;
         this.particle = new Particle(x, y, 1, false);
         this.lineStyle({width: 3, color: 0x000000});
         this.moveTo(x, y);
@@ -271,8 +269,8 @@ class ConstantForce {
     }
 
     apply(particle) {
-        particle.force.x += this.x / particle.mass;
-        particle.force.y += this.y / particle.mass;
+        particle.force.x += this.x;
+        particle.force.y += this.y;
     }
 }
 
@@ -288,8 +286,8 @@ class RadialForce {
         let distance = dir.magnitude();
         dir.normalize();
         let force = Math.min(this.power / Math.pow(distance / this.size, 2), this.power);
-        particle.force.x += dir.x * force / particle.mass;
-        particle.force.y += dir.y * force / particle.mass;
+        particle.force.x += dir.x * force;
+        particle.force.y += dir.y * force;
     }
 }
 

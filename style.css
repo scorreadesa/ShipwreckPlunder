@@ -10,8 +10,8 @@ body {
 
 .ui {
     text-align: justify;
-    padding-left: 1%;
-    padding-right: 5%;
+    padding-left: 10px;
+    padding-right: 10px;
     border-style: solid;
     border-left: transparent;
 }
@@ -20,6 +20,17 @@ body {
     width: 40px;
 }
 
+.checkbox {
+    margin-top: 0;
+    margin-bottom: 0;
+    vertical-align: middle;
+}
+
 .sidebar-entry {
     padding-bottom: 2px;
+}
+
+h1 {
+    margin-top: 10px;
+    margin-bottom: 5px;
 }

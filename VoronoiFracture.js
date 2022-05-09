@@ -1,45 +1,129 @@
 VoronoiFracture = {}
-VoronoiFracture.debugShowPoints = true;
-VoronoiFracture.debugShowField = true;
+VoronoiFracture.debugShowPoints = false;
+VoronoiFracture.debugShowField = false;
+VoronoiFracture.noised = true;
+VoronoiFracture.type = 1;
+VoronoiFracture.noiseType = 1;
+VoronoiFracture.partialField = true;
 VoronoiFracture.ImageBuffer = {};
+VoronoiFracture.octaves = 4;
+VoronoiFracture.scale = 0.2;
+VoronoiFracture.persistence = 0.5;
+VoronoiFracture.lacunarity = 2.1;
+VoronoiFracture.noiseImpact = 3.5;
+VoronoiFracture.debugPersistence = 5000;
 
+VoronoiFracture.Init = Init;
 VoronoiFracture.FractureSprite = FractureSprite;
 VoronoiFracture.RegisterTexture = RegisterTexture;
+
+function Init() {
+
+}
 
 function RegisterTexture(name, path) {
     let img = new Image();
     img.src = path;
     img.addEventListener("load", () => {
         let canvas = document.createElement("canvas");
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
         let context = canvas.getContext("2d");
         context.drawImage(img, 0, 0);
         VoronoiFracture.ImageBuffer[name] = new ImageDataWrapper(context.getImageData(0, 0, img.naturalWidth, img.naturalHeight));
     })
 }
 
-function FractureSprite(sprite, textureName) {
-    let width = sprite.width;
-    let height = sprite.height;
-    let cells = [];
+function FractureSprite(sprite, textureName, point, force) {
     let data = VoronoiFracture.ImageBuffer[textureName];
+    let width = data.data.width;
+    let height = data.data.height;
+    let cells;
+    let center;
 
-    // TODO: Split into separate methods for different scattering approaches
-    for (let i = 0; i < 15; i++) {
-        cells.push(new VoronoiCell(Math.round(Math.random() * height), Math.round(Math.random() * width), RandomColor()));
+    noise.seed(Math.random());
+
+    if (VoronoiFracture.type === 0) {
+        cells = RandomPoints(width, height, 15);
+        center = new Vector2(sprite.x, sprite.y);
+    } else if (VoronoiFracture.type === 1) {
+        let offset = new Vector2(point.x - sprite.x, point.y - sprite.y);
+        offset.scalarMultiply(1 / sprite.scale.x);
+        offset.rotate(-sprite.angle);
+        cells = ShatterPoints(width, height, 25, new Vector2(offset.x + width / 2, offset.y + height / 2));
+        center = point;
     }
 
     let pixels = [];
     let indices = [];
+
     for (let y = 0; y < height; y++) {
         for (let x = 0; x < width; x++) {
-            let closest = FindClosest(x, y, cells);
+            if (VoronoiFracture.partialField && data.pixel(x, y).a <= 0) {
+                indices.push(-1);
+                if (VoronoiFracture.debugShowField) {
+                    pixels.push(0);
+                }
+                continue;
+            }
+
+            let closest = -1;
+            let second = -1;
+            let dist = Number.MAX_VALUE;
+            let distSecond = Number.MAX_VALUE;
+            for (let i = 0; i < cells.length; i++) {
+                let d = DistanceSquared(cells[i].seed.x, cells[i].seed.y, x, y);
+                if (d < dist) {
+                    second = closest;
+                    distSecond = dist;
+                    closest = i;
+                    dist = d;
+                } else if (d < distSecond && d !== dist) {
+                    second = i;
+                    distSecond = d;
+                }
+            }
+
+            if (VoronoiFracture.noised && second >= 0) {
+                let value;
+                if (VoronoiFracture.noiseType === 0) {
+                    value = OctaveNoise(x / width, y / height, VoronoiFracture.octaves, VoronoiFracture.scale, VoronoiFracture.persistence, VoronoiFracture.lacunarity);
+                    dist += value * VoronoiFracture.noiseImpact * sprite.scale.x; // Assuming uniformly scaled sprites
+                    distSecond -= value * VoronoiFracture.noiseImpact * sprite.scale.x;
+                } else if (VoronoiFracture.noiseType === 1) {
+                    let midpoint = cells[closest].seed.addPure(cells[second].seed);
+                    midpoint.scalarMultiply(0.5);
+                    let normal = new Vector2(cells[closest].seed.y - midpoint.y, -(cells[closest].seed.x - midpoint.x));
+                    normal.normalize();
+                    let t0 = normal.dot(new Vector2(x - midpoint.x, y - midpoint.y));
+                    normal.scalarMultiply(t0);
+                    let nearPoint = midpoint.addPure(normal); // Closest point on separating line
+                    value = OctaveNoise(nearPoint.x / width, nearPoint.y / height, VoronoiFracture.octaves, VoronoiFracture.scale, VoronoiFracture.persistence, VoronoiFracture.lacunarity);
+                    let nearToSample = new Vector2(x - nearPoint.x, y - nearPoint.y);
+                    nearToSample.normalize();
+                    let sample = new Vector2(x, y);
+                    value *= VoronoiFracture.noiseImpact;
+                    nearToSample.scalarMultiply(value * Math.sign(closest - second));
+                    sample.add(nearToSample);
+                    let sampleToClosest = sample.subtractPure(cells[closest].seed);
+                    let sampleToSecond = sample.subtractPure(cells[second].seed);
+                    dist = sampleToClosest.magnitude();
+                    distSecond = sampleToSecond.magnitude();
+                }
+
+                if (distSecond < dist) {
+                    closest = second;
+                }
+            }
+
             cells[closest].updateBounds(x, y);
-            pixels.push(cells[closest].color); // TODO: Check for debug option
+            if (VoronoiFracture.debugShowField) {
+                pixels.push(cells[closest].color);
+                //pixels.push(Grayscale(OctaveNoise(x / width, y / height, VoronoiFracture.octaves, VoronoiFracture.scale, VoronoiFracture.persistence, VoronoiFracture.lacunarity))); // Noise visualization
+            }
             indices.push(closest);
         }
     }
-
-    // TODO: Apply Noise. Need to re-sample bounds for cells.
 
     cells.forEach((cell) => {
         cell.createEmptyPixels();
@@ -47,35 +131,120 @@ function FractureSprite(sprite, textureName) {
 
     for (let y = 0; y < height; y++) {
         for (let x = 0; x < width; x++) {
-            cells[indices[y * width + x]].setPixel(x, y, data.pixel(x, y).toABGR());
+            let index = indices[y * width + x];
+            if (index >= 0) {
+                cells[index].setPixel(x, y, data.pixel(x, y).toABGR());
+            }
         }
     }
 
-    let s = SpriteFromPixels(pixels, width, height);
-    s.x = sprite.x;
-    s.y = sprite.y;
-    s.angle = sprite.angle;
-    s.anchor = sprite.anchor;
-    Game.PIXIApp.stage.addChild(s);
+    if (VoronoiFracture.debugShowField) {
+        let s = SpriteFromPixels(pixels, width, height);
+        s.x = sprite.x;
+        s.y = sprite.y;
+        s.angle = sprite.angle;
+        s.anchor = sprite.anchor;
+        s.scale = sprite.scale;
+        Game.PIXIApp.stage.addChild(s);
+
+        setTimeout(() => {
+            s.destroy(true);
+        }, VoronoiFracture.debugPersistence)
+    }
 
     cells.forEach((cell) => {
-        if (cell.pixels === undefined) {
+        if (cell.pixels.length === 0) {
             return;
         }
+
         let s = SpriteFromPixels(cell.pixels, cell.maxX - cell.minX + 1, cell.maxY - cell.minY + 1);
-        //Debug.DrawLine(sprite.x, sprite.y, sprite.x + cell.seed.y - width / 2, sprite.y + cell.seed.x - height / 2, 5000);
-        s.anchor.set((cell.seed.y - cell.minX) / (cell.maxX - cell.minX), (cell.seed.x - cell.minY) / (cell.maxY - cell.minY));
-        // TODO: Apply rotations
-        let x = sprite.x + cell.seed.y - width / 2;
-        let y = sprite.y + cell.seed.x - height / 2;
-        let fade = 3;
-        let frag = new Fragment(x, y, s, fade);
-        Game.Objects.push(frag);
-        setTimeout(() => {
-            Game.Objects.filter((obj) => {return obj !== frag})
-            frag.destroy();
-        }, fade * 1000);
+        let offset = new Vector2(cell.seed.x - width / 2, cell.seed.y - height / 2);
+        offset.scalarMultiply(sprite.scale.x);
+        offset.rotate(sprite.angle);
+
+        if (VoronoiFracture.debugShowPoints) {
+            Debug.DrawDot(sprite.x + offset.x, sprite.y + offset.y, 1.5, VoronoiFracture.debugPersistence);
+        }
+        s.anchor.set((cell.seed.x - cell.minX) / (cell.maxX - cell.minX + 1), (cell.seed.y - cell.minY) / (cell.maxY - cell.minY + 1));
+        s.angle = sprite.angle;
+        s.scale = sprite.scale;
+
+        let x = sprite.x + offset.x;
+        let y = sprite.y + offset.y;
+
+        let frag = new Fragment(x, y, s, 1);
+
+        let forceVector = new Vector2(x - center.x, y - center.y);
+        forceVector.normalize();
+        forceVector.scalarMultiply(force);
+        frag.particle.vel = forceVector;
     })
+}
+
+function RandomPoints(width, height, amount) {
+    let cells = [];
+    for (let i = 0; i < amount; i++) {
+        cells.push(new VoronoiCell(Math.random() * height, Math.random() * width, RandomColor()));
+    }
+    return cells;
+}
+
+function ShatterPoints(width, height, amount, point) {
+    let cells = [];
+    let radius = Math.max(width, height) * 0.5;
+    let innerRatio = 0.75;
+    let innerRing = radius * innerRatio;
+    let innerCells = Math.floor(amount / 2);
+    let angle = 0;
+
+    while (angle < 360) {
+        let vector = new Vector2(0, 1);
+        angle += (360 / innerCells) * 0.5 + (360 / innerCells) * 0.5 * (Math.random() * 2);
+        vector.rotate(angle);
+        vector.scalarMultiply(innerRing);
+        vector.add(point);
+        cells.push(new VoronoiCell(vector.x, vector.y, RandomColor()));
+        amount--;
+    }
+
+    while (amount > 0) {
+        let vector = new Vector2(0, 1);
+        vector.rotate(Math.random() * 360);
+        vector.scalarMultiply(innerRing + radius * Math.random());
+        vector.add(point);
+        if (vector.x < 0 || vector.y < 0 || vector.x > width || vector.y > height) {
+            continue;
+        }
+        cells.push(new VoronoiCell(vector.x, vector.y, RandomColor()));
+        amount--;
+    }
+    return cells;
+}
+
+function Distance(a, b, x, y) {
+    let xDist = a - x;
+    let yDist = b - y;
+    return Math.sqrt(xDist * xDist + yDist * yDist);
+}
+
+function DistanceSquared(a, b, x, y) {
+    let xDist = a - x;
+    let yDist = b - y;
+    return xDist * xDist + yDist * yDist;
+}
+
+function OctaveNoise(x, y, octaves, scale, persistence, lacunarity) {
+    let amplitude = 1;
+    let frequency = 1;
+    let cumulative = 0;
+
+    for (let o = 0; o < octaves; o++) {
+        let sample = noise.perlin2(x / scale * frequency, y / scale * frequency);
+        cumulative += sample;
+        amplitude *= persistence;
+        frequency *= lacunarity;
+    }
+    return cumulative;
 }
 
 function SpriteFromPixels(pixels, width, height) {
@@ -87,30 +256,46 @@ function SpriteFromPixels(pixels, width, height) {
     return new PIXI.Sprite(texture);
 }
 
-function FindClosest(x, y, cells) {
-    let best = -1;
-    let dist = 99999999999;
-    cells.forEach((cell, i) => {
-        let pos = new Vector2(y, x);
-        pos.subtract(cell.seed);
-        let d = pos.magnitude();
-        if (d < dist) {
-            best = i;
-            dist = d;
-        }
-    })
-    return best;
+function RandomColor() {
+    let r = Math.floor(255 * Math.random());
+    let g = Math.floor(255 * Math.random());
+    let b = Math.floor(255 * Math.random());
+    return 255 * 256 * 256 * 256 + r * 256 * 256 + g * 256 + b; // It's ARGB internally
 }
 
-function RandomColor() {
-    let r = Math.floor(256 * Math.random());
-    let g = Math.floor(256 * Math.random());
-    let b = Math.floor(256 * Math.random());
-    return 255 * 256 * 256 * 256 + r * 256 * 256 + g * 256 + b; // It's ARGB internally
+function Grayscale(value) {
+    value = Math.min(1, Math.max(0, (value + 1) / 2));
+    let v = Math.floor(255 * value);
+    return 255 * 256 * 256 * 256 + v * 256 * 256 + v * 256 + v;
 }
 
 //////////
 // Classes
+
+class Fragment extends GameObject {
+    constructor(x, y, sprite, fade) {
+        super(x, y, sprite, 0);
+        this.fade = fade;
+        this.currentFade = fade;
+        this.particle = new Particle(x, y, 1, false); // TODO: Calculate mass based on pixels if needed
+    }
+
+    update(delta) {
+        ParticleDynamics.UpdateParticle(this.particle, delta);
+        this.sprite.x = this.particle.pos.x;
+        this.sprite.y = this.particle.pos.y;
+        this.currentFade -= delta;
+        this.sprite.alpha = this.currentFade / this.fade;
+        if (this.fade < 0) {
+            this.destroy();
+        }
+    }
+
+    destroy() {
+        super.destroy();
+        this.sprite.destroy(true); // Destroys texture too
+    }
+}
 
 class VoronoiCell {
     constructor(x, y, color) {
@@ -147,13 +332,13 @@ class VoronoiCell {
     }
 
     createEmptyPixels() {
+        this.pixels = [];
+        if (this.width() <= 0 || this.height() <= 0) {
+            return;
+        }
         let length = (this.width() + 1) * (this.height() + 1);
-        try {
-            this.pixels = Array.apply(null, Array(length)).map(() => {
-                return 0
-            });
-        } catch (err) {
-            console.log("Create Empty Pixels Error: " + err);
+        for (let i = 0; i < length; i++) {
+            this.pixels.push(0);
         }
     }
 

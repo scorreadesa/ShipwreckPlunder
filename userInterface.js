@@ -8,6 +8,13 @@ UI.ApplyH = ApplyH;
 UI.ApplyEuler = ApplyEuler;
 UI.ApplyForceLines = ApplyForceLines;
 UI.ApplyPaths = ApplyPaths;
+UI.ApplyFractureDebugPoints = ApplyFractureDebugPoints;
+UI.ApplyFractureDebugField = ApplyFractureDebugField;
+UI.ApplyNoised = ApplyNoised;
+UI.ApplyFractureType = ApplyFractureType;
+UI.ApplyNoiseType = ApplyNoiseType;
+UI.TogglePause = TogglePause;
+UI.Step = Step;
 
 UI.Elements = {};
 
@@ -20,6 +27,13 @@ function Init() {
     UI.Elements.euler = document.getElementById("euler");
     UI.Elements.lines = document.getElementById("lines");
     UI.Elements.paths = document.getElementById("paths");
+    UI.Elements.noised = document.getElementById("noised");
+    UI.Elements.centers = document.getElementById("centers");
+    UI.Elements.cells = document.getElementById("cells");
+    UI.Elements.type = document.getElementById("type");
+    UI.Elements.noiseType = document.getElementById("noiseType");
+    UI.Elements.pause = document.getElementById("pause");
+    UI.Elements.step = document.getElementById("step");
 
     UI.Elements.tps.value = Game.simulationTPS;
     UI.Elements.fps.value = Game.renderFPS;
@@ -28,6 +42,13 @@ function Init() {
     UI.Elements.euler.checked = ParticleDynamics.eulerSolver;
     UI.Elements.lines.checked = ParticleDynamics.debugLinesEnabled;
     UI.Elements.paths.checked = ParticleDynamics.debugPathsEnabled;
+    UI.Elements.noised.checked = VoronoiFracture.noised;
+    UI.Elements.centers.checked = VoronoiFracture.debugShowPoints;
+    UI.Elements.cells.checked = VoronoiFracture.debugShowField;
+    UI.Elements.type.value = VoronoiFracture.type;
+    UI.Elements.noiseType.value = VoronoiFracture.noiseType;
+    UI.Elements.pause.innerText = Game.paused ? "Unpause" : "Pause";
+    UI.Elements.step.disabled = !Game.paused;
 }
 
 function UpdateInterface() {
@@ -68,4 +89,40 @@ function ApplyForceLines() {
 
 function ApplyPaths() {
     ParticleDynamics.SetDebugPaths(UI.Elements.paths.checked);
+}
+
+function ApplyFractureDebugPoints() {
+    VoronoiFracture.debugShowPoints = UI.Elements.centers.checked;
+}
+
+function ApplyFractureDebugField() {
+    VoronoiFracture.debugShowField = UI.Elements.cells.checked;
+}
+
+function ApplyNoised() {
+    VoronoiFracture.noised = UI.Elements.noised.checked;
+}
+
+function ApplyFractureType() {
+    VoronoiFracture.type = parseInt(UI.Elements.type.value);
+}
+
+function ApplyNoiseType() {
+    VoronoiFracture.noiseType = parseInt(UI.Elements.noiseType.value);
+}
+
+function TogglePause() {
+    if (Game.paused) {
+        Game.Unpause();
+        UI.Elements.pause.innerText = "Pause";
+        UI.Elements.step.disabled = true;
+    } else {
+        Game.Pause();
+        UI.Elements.pause.innerText = "Unpause";
+        UI.Elements.step.disabled = false;
+    }
+}
+
+function Step() {
+    Game.Step();
 }

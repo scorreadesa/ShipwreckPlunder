@@ -4,6 +4,10 @@ class Vector2 {
         this.y = y;
     }
 
+    clone() {
+        return new Vector2(this.x, this.y);
+    }
+
     magnitude() {
         return Math.sqrt(this.x * this.x + this.y * this.y);
     }
@@ -60,5 +64,14 @@ class Vector2 {
     scalarDivide(scalar) {
         this.x /= scalar;
         this.y /= scalar;
+    }
+
+    rotate(angle)
+    {
+        let radians = angle * (Math.PI / 180);
+        let tempX = this.x;
+        let tempY = this.y;
+        this.x = Math.cos(radians) * tempX - Math.sin(radians) * tempY;
+        this.y = Math.sin(radians) * tempX + Math.cos(radians) * tempY;
     }
 }
