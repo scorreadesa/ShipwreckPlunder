@@ -179,17 +179,21 @@ function Pause() {
     if (Game.simulationInterval !== undefined) {
         clearInterval(Game.simulationInterval);
     }
+    Game.PIXIApp.ticker.stop();
+    Game.PIXIApp.renderer.render(Game.PIXIApp.stage); // Render current state of game
 }
 
 function Unpause() {
     Game.paused = false;
     Game.lastTimestamp = -1;
     SetSimulationTPS(Game.simulationTPS);
+    Game.PIXIApp.ticker.start();
 }
 
 function Step() {
     Game.lastTimestamp = -1;
     Tick();
+    Game.PIXIApp.renderer.render(Game.PIXIApp.stage); // Simulation and rendering in lockstep while stepping
 }
 
 function GetCollidingObjects(obj) {
