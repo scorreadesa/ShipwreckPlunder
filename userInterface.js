@@ -18,6 +18,11 @@ UI.Step = Step;
 
 UI.Elements = {};
 
+/**
+ * Init functions for the UI controls
+ * @constructor
+ */
+
 function Init() {
     UI.Elements.game = document.getElementById("game");
     UI.Elements.tps = document.getElementById("tps");

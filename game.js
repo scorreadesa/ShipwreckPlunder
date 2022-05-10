@@ -84,6 +84,15 @@ function Setup() {
     ParticleDynamics.Forces.push(new DragForce(0.5));
     ParticleDynamics.Forces.push(new PlayerMovementForce());
     CreatePlayer();
+    let control_points = [new Vector2(20, 20), new Vector2(90, 80), new Vector2(120, 150),
+        new Vector2(200, 180), new Vector2(250, 220), new Vector2(280, 250), new Vector2(290, 300)];
+    let cmr = new CatmullRom(0.25);
+    cmr.addPoints(control_points);
+    let more_control_points = [new Vector2(350, 420), new Vector2(250, 300), new Vector2(120, 180)];
+    cmr.addPoints(more_control_points);
+    cmr.addPoint(new Vector2(40, 80));
+    cmr.addPoint(new Vector2(90, 80));
+    cmr.addPoint(new Vector2(20, 20));
 }
 
 function CreatePlayer() {
@@ -123,16 +132,6 @@ function Tick() {
     Game.lastTimestamp = window.performance.now();
     UI.UpdateInterface();
     SimulationUpdate(delta);
-
-    let control_points = [new Vector2(20, 20), new Vector2(90, 80), new Vector2(120, 150),
-        new Vector2(200, 180), new Vector2(250, 220), new Vector2(280, 250), new Vector2(290, 300)];
-    let cmr = new CatmullRom(0.25);
-    cmr.addPoints(control_points);
-    let more_control_points = [new Vector2(350, 420), new Vector2(250, 300), new Vector2(120, 180)];
-    cmr.addPoints(more_control_points);
-    cmr.addPoint(new Vector2(40, 80));
-    cmr.addPoint(new Vector2(90, 80));
-    cmr.addPoint(new Vector2(20, 20));
 }
 
 function SimulationUpdate(delta) {
