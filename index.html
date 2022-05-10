@@ -51,14 +51,17 @@
             <input id="hValue" type="number" min="0.001" max="1" step="0.001">
             <button type="button" onclick="UI.ApplyH()">Apply</button>
         </div>
+
         <div class="sidebar-entry">
             <label for="euler">Use Euler Solver: </label>
             <input id="euler" type="checkbox" class="checkbox" onchange="UI.ApplyEuler()">
         </div>
+
         <div class="sidebar-entry">
             <label for="lines">Force Lines: </label>
             <input id="lines" type="checkbox" class="checkbox" onchange="UI.ApplyForceLines()">
         </div>
+
         <div class="sidebar-entry">
             <label for="paths">Particle Paths: </label>
             <input id="paths" type="checkbox" class="checkbox" onchange="UI.ApplyPaths()">
@@ -91,7 +94,7 @@
             <input id="centers" type="checkbox" class="checkbox" onchange="UI.ApplyFractureDebugPoints()">
         </div>
         <div class="sidebar-entry">
-            <label for="cells">Voronoi Cells: </label>
+            <label for="cells">Distance Field: </label>
             <input id="cells" type="checkbox" class="checkbox" onchange="UI.ApplyFractureDebugField()">
         </div>
         <h1>Path Interpolation</h1>

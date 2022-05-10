@@ -5,6 +5,7 @@ VoronoiFracture.noised = true;
 VoronoiFracture.type = 1;
 VoronoiFracture.noiseType = 1;
 VoronoiFracture.partialField = true;
+VoronoiFracture.drawCells = false;
 VoronoiFracture.ImageBuffer = {};
 VoronoiFracture.octaves = 4;
 VoronoiFracture.scale = 0.2;
@@ -84,41 +85,38 @@ function FractureSprite(sprite, textureName, point, force) {
                 }
             }
 
+            let midpoint = cells[closest].seed.addPure(cells[second].seed);
+            midpoint.scalarMultiply(0.5);
+            let normal = new Vector2(cells[closest].seed.y - midpoint.y, -(cells[closest].seed.x - midpoint.x));
+            normal.normalize();
+            let t0 = normal.dot(new Vector2(x - midpoint.x, y - midpoint.y));
+            normal.scalarMultiply(t0);
+            let nearPoint = midpoint.addPure(normal); // Closest point on separating line
+            let distance = Distance(nearPoint.x, nearPoint.y, x, y);
+
             if (VoronoiFracture.noised && second >= 0) {
                 let value;
-                if (VoronoiFracture.noiseType === 0) {
+                if(VoronoiFracture.noiseType === 0) {
                     value = OctaveNoise(x / width, y / height, VoronoiFracture.octaves, VoronoiFracture.scale, VoronoiFracture.persistence, VoronoiFracture.lacunarity);
-                    dist += value * VoronoiFracture.noiseImpact * sprite.scale.x; // Assuming uniformly scaled sprites
-                    distSecond -= value * VoronoiFracture.noiseImpact * sprite.scale.x;
-                } else if (VoronoiFracture.noiseType === 1) {
-                    let midpoint = cells[closest].seed.addPure(cells[second].seed);
-                    midpoint.scalarMultiply(0.5);
-                    let normal = new Vector2(cells[closest].seed.y - midpoint.y, -(cells[closest].seed.x - midpoint.x));
-                    normal.normalize();
-                    let t0 = normal.dot(new Vector2(x - midpoint.x, y - midpoint.y));
-                    normal.scalarMultiply(t0);
-                    let nearPoint = midpoint.addPure(normal); // Closest point on separating line
+                } else {
                     value = OctaveNoise(nearPoint.x / width, nearPoint.y / height, VoronoiFracture.octaves, VoronoiFracture.scale, VoronoiFracture.persistence, VoronoiFracture.lacunarity);
-                    let nearToSample = new Vector2(x - nearPoint.x, y - nearPoint.y);
-                    nearToSample.normalize();
-                    let sample = new Vector2(x, y);
-                    value *= VoronoiFracture.noiseImpact;
-                    nearToSample.scalarMultiply(value * Math.sign(closest - second));
-                    sample.add(nearToSample);
-                    let sampleToClosest = sample.subtractPure(cells[closest].seed);
-                    let sampleToSecond = sample.subtractPure(cells[second].seed);
-                    dist = sampleToClosest.magnitude();
-                    distSecond = sampleToSecond.magnitude();
                 }
 
-                if (distSecond < dist) {
+                distance += value * VoronoiFracture.noiseImpact * Math.sign(closest - second);
+
+                if (distance < 0) {
                     closest = second;
                 }
             }
 
             cells[closest].updateBounds(x, y);
             if (VoronoiFracture.debugShowField) {
-                pixels.push(cells[closest].color);
+                if (VoronoiFracture.drawCells) {
+                    pixels.push(cells[closest].color);
+                } else {
+                    pixels.push(Grayscale((distance / 10) % 1));
+                }
+
                 //pixels.push(Grayscale(OctaveNoise(x / width, y / height, VoronoiFracture.octaves, VoronoiFracture.scale, VoronoiFracture.persistence, VoronoiFracture.lacunarity))); // Noise visualization
             }
             indices.push(closest);
