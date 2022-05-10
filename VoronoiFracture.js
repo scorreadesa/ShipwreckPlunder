@@ -170,7 +170,7 @@ function FractureSprite(sprite, textureName, point, force) {
         let x = sprite.x + offset.x;
         let y = sprite.y + offset.y;
 
-        let frag = new Fragment(x, y, s, 1);
+        let frag = new Fragment(x, y, s, 3);
 
         let forceVector = new Vector2(x - center.x, y - center.y);
         forceVector.normalize();
