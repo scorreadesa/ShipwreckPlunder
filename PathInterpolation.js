@@ -75,6 +75,29 @@ class CatmullRom {
         }
     }
 
+    #interpolateAll(t, tau)
+    {
+        let interpolated_points = [];
+        let last_point_idx = this.points.length - 2;
+
+        for(let idx = this.current_point_idx; idx < last_point_idx; idx++)
+        {
+            let old_pt = this.points[idx];
+            interpolated_points.push(old_pt);
+
+            for(let start = 0.0; start <= 1.0; start += this.draw_step)
+            {
+                let new_pt = this.#interpolateAt(start, 0.5);
+                interpolated_points.push(new_pt);
+                old_pt = new_pt;
+            }
+
+            this.current_point_idx++;
+        }
+
+        return interpolated_points;
+    }
+
     addPoint(point)
     {
         if(!(point instanceof Vector2))
