@@ -11,10 +11,7 @@ class CatmullRom {
     {
         this.points = [];
         this.current_point_idx = 1;
-        this.last_drawn_points_idx = 0;
-        this.graphics = new PIXI.Graphics();
         this.draw_step = draw_step;
-        Game.PIXIApp.stage.addChild(this.graphics);
     }
 
     #interpolateAt(t, tau)
@@ -44,58 +41,32 @@ class CatmullRom {
         return pt;
     }
 
-    #draw()
+    #interpolateAll()
     {
-        // draw the points
-        for(let idx = this.last_drawn_points_idx; idx < this.points.length; idx++)
-        {
-            this.graphics.beginFill(0xff00ee);
-            this.graphics.drawCircle(this.points[idx].x, this.points[idx].y, 5.0);
-            this.graphics.endFill();
-            this.last_drawn_points_idx++;
-        }
-
-        // draw the curve
         let last_point_idx = this.points.length - 2;
-        for(let idx = this.current_point_idx; idx < last_point_idx; idx++)
-        {
-            let old_pt = this.points[idx];
-
-            for(let start = 0.0; start <= 1.0; start += this.draw_step)
-            {
-                let new_pt = this.#interpolateAt(start, 0.5);
-                this.graphics.beginFill(0xff0000);
-                this.graphics.drawCircle(new_pt.x, new_pt.y, 2.5);
-                this.graphics.lineStyle(1, 0xff0000).moveTo(old_pt.x, old_pt.y).lineTo(new_pt.x, new_pt.y);
-                old_pt = new_pt;
-                this.graphics.endFill();
-            }
-
-            this.current_point_idx++;
-        }
-    }
-
-    #interpolateAll(t, tau)
-    {
-        let interpolated_points = [];
-        let last_point_idx = this.points.length - 2;
+        //console.log("Before: ", this.points);
 
         for(let idx = this.current_point_idx; idx < last_point_idx; idx++)
         {
+            let interpolated_points = [];
             let old_pt = this.points[idx];
-            interpolated_points.push(old_pt);
 
-            for(let start = 0.0; start <= 1.0; start += this.draw_step)
+            for(let start = this.draw_step; start < 1.0; start += this.draw_step)
             {
                 let new_pt = this.#interpolateAt(start, 0.5);
                 interpolated_points.push(new_pt);
                 old_pt = new_pt;
             }
 
+            console.log("Interpolated between : " + JSON.stringify(this.points[this.current_point_idx], null, 2) +
+                " and " + JSON.stringify(this.points[this.points.length - 2], null, 2) +
+                ": " + JSON.stringify(interpolated_points, null, ));
+            this.points.splice(this.current_point_idx + 1, 0, ...interpolated_points);
+            console.log(this.points);
+            this.current_point_idx += interpolated_points.length;
             this.current_point_idx++;
+            console.log(this.current_point_idx);
         }
-
-        return interpolated_points;
     }
 
     addPoint(point)
@@ -106,10 +77,12 @@ class CatmullRom {
         }
 
         this.points.push(point);
+        console.log("(" + point.x + ", " + point.y + ")");
 
         if(this.points.length >= 4 && this.current_point_idx + 2 < this.points.length)
         {
-            this.#draw();
+            console.log("interpolating...");
+            this.#interpolateAll();
         }
     }
 
@@ -127,7 +100,43 @@ class CatmullRom {
 
         if(this.points.length >= 4 && this.current_point_idx + 2 < this.points.length)
         {
-            this.#draw();
+            this.#interpolateAll();
         }
+    }
+
+    getPoints()
+    {
+        return this.points;
+    }
+
+    setStepSize(step_size)
+    {
+        if(step_size > 0 && step_size < 1)
+        {
+            this.draw_step = step_size
+        }
+    }
+}
+
+function drawPoints(points)
+{
+    for(let idx = 0; idx < points.length; idx++)
+    {
+        Game.graphics.beginFill(0xff00ee);
+        Game.graphics.drawCircle(points[idx].x, points[idx].y, 5.0);
+        Game.graphics.endFill();
+    }
+}
+
+function drawSpline(points)
+{
+    let first_point = points[0];
+    for(let idx = 1; idx < points.length; idx++)
+    {
+        let next_point = points[idx];
+        Game.graphics.beginFill(0xff0000);
+        Game.graphics.lineStyle(1, 0xff0000).moveTo(first_point.x, first_point.y).lineTo(next_point.x, next_point.y);
+        Game.graphics.endFill();
+        first_point = next_point;
     }
 }

@@ -98,20 +98,20 @@
             <label for="cells">Distance Field: </label>
             <input id="cells" type="checkbox" class="checkbox" onchange="UI.ApplyFractureDebugField()">
         </div>
-        <!--<h1>Path Interpolation</h1>
+        <h1>Path Interpolation</h1>
         <div class="sidebar-entry">
             <label>Render: </label>
-            <button>Splines</button>
-            <button>Control Points</button>
+            <button onclick="Game.DrawSplineCurve()">Splines</button>
+            <button onclick="Game.DrawControlPoints()">Control Points</button>
             <button>Arc-Length Table</button>
         </div>
         <div class="sidebar-entry">
             <label>Add Point: </label>
             <label>x </label>
-            <input class="short" type="number" min="0" max="960" step="1">
+            <input id="xcoordinate" class="short" type="number" min="0" max="960" step="1">
             <label>y </label>
-            <input class="short" type="number" min="0" max="960" step="1">
-            <button>OK</button>
+            <input id="ycoordinate" class="short" type="number" min="0" max="960" step="1">
+            <button onclick="Game.AddPoint()">OK</button>
         </div>
         <div class="sidebar-entry">
             <label>Traversal Speed: </label>
@@ -119,7 +119,7 @@
             <label>Animation Update Rate: </label>
             <input class="short" type="number" min="1" max="144" step="1.0">
         </div>
-        <h1>Motion Blur</h1>-->
+        <h1>Motion Blur</h1>
         <!-- PathInterpolation, switch rendering on/off, add points dynamically, see slides -->
         <!--<p>Score:</p>
         <p>Health:</p>

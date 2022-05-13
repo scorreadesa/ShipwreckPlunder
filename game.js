@@ -27,6 +27,13 @@ Game.Objects = [];
 Game.Forces = [];
 Game.Motion = [];
 
+// Temporary for PathInterpolation testing
+Game.CatmullRomDebug = undefined;
+
+Game.AddPoint = AddPoint;
+Game.DrawControlPoints = DrawControlPoints;
+Game.DrawSplineCurve = DrawSplineCurve;
+
 Game.Init = Init;
 Game.SetSimulationTPS = SetSimulationTPS;
 Game.SetRenderFPS = SetRenderFPS;
@@ -57,6 +64,10 @@ function LoadAssets() {
     Game.PIXIApp = new PIXI.Application({width: Game.width, height: Game.height, backgroundColor: 0x1099bb});
     UI.Elements.game.appendChild(Game.PIXIApp.view); // TODO: Once window decoration is here, attach in a way that fits
 
+    let graphics = new PIXI.Graphics();
+    Game.graphics = graphics;
+    Game.PIXIApp.stage.addChild(graphics);
+
     Game.PIXIApp.ticker.minFPS = 0;
     Game.PIXIApp.ticker.maxFPS = Game.renderFPS;
     if (!Game.paused) {
@@ -78,12 +89,14 @@ function LoadAssets() {
     loader.add("ship2", "assets/ship2w.png");
     loader.add("barrel", "assets/barrel.png");
     loader.add("vortex", "assets/vortex.png");
+    loader.add("coconut", "assets/coconut.png");
     loader.load(Setup);
 }
 
 function Setup() {
     ParticleDynamics.Forces.push(new DragForce(0.5));
     ParticleDynamics.Forces.push(new PlayerMovementForce());
+
     CreatePlayer();
 }
 
@@ -274,4 +287,36 @@ function SetupKey(value) {
     };
 
     return key;
+}
+
+function AddPoint()
+{
+
+    /*
+     * general idea, add point to path, interpolate of >= 4 points in the buffer
+     * render control points if button clicked
+     * render splines if button clicked
+     */
+    let x = parseFloat(document.getElementById("xcoordinate").value);
+    let y = parseFloat(document.getElementById("ycoordinate").value);
+    if(!Game.CatmullRomDebug) {
+        Game.CatmullRomDebug = new CatmullRom();
+    }
+    Game.CatmullRomDebug.addPoint(new Vector2(x, y));
+}
+
+function DrawControlPoints()
+{
+    if(Game.CatmullRomDebug) {
+        const points = Game.CatmullRomDebug.getPoints();
+        drawPoints(points);
+    }
+}
+
+function DrawSplineCurve()
+{
+    if(Game.CatmullRomDebug) {
+        const points = Game.CatmullRomDebug.getPoints();
+        drawSpline(points);
+    }
 }
