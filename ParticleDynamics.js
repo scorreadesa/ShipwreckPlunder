@@ -80,7 +80,10 @@ function RungeKutta(particle, delta, h) {
 
 function CalculateForce(particle) {
     particle.clearForce();
-    ParticleDynamics.Forces.forEach((force, i) => {
+    particle.selfForces.forEach((force) => {
+        force.apply(particle);
+    })
+    ParticleDynamics.Forces.forEach((force) => {
         force.apply(particle);
     })
 
@@ -155,7 +158,7 @@ class Particle {
         this.mass = mass;
         this.tracked = tracked;
         this.tracking = false;
-        this.isPlayer = false;
+        this.selfForces = [];
 
         if (tracked) {
             this.lastPositions = [];
@@ -175,13 +178,18 @@ class Particle {
         this.vel.y += changes.velY * multiplier;
     }
 
+    addImpulse(vector) {
+        this.vel.x += vector.x / this.mass;
+        this.vel.y += vector.y / this.mass;
+    }
+
     clone() {
         let c = new Particle(this.pos.x, this.pos.y, this.mass);
         c.vel.x = this.vel.x;
         c.vel.y = this.vel.y;
         c.force.x = this.force.x;
         c.force.y = this.force.y;
-        c.isPlayer = this.isPlayer;
+        c.selfForces = this.selfForces;
         return c;
     }
 
@@ -291,6 +299,25 @@ class RadialForce {
     }
 }
 
+class VortexForce {
+    constructor(x, y, power, size) {
+        this.center = new Vector2(x, y);
+        this.power = power;
+        this.size = size;
+    }
+
+    apply(particle) {
+        let dir = this.center.subtractPure(particle.pos);
+        let distance = dir.magnitude();
+        dir.normalize();
+        let sizeRatio = Math.min(1, distance / this.size) * 0.5;
+        let normal = new Vector2(-dir.y, dir.x);
+        let force = Math.min(this.power / Math.pow(distance / this.size, 2), this.power);
+        particle.force.x += dir.x * force * (1 - sizeRatio) + normal.x * force * sizeRatio;
+        particle.force.y += dir.y * force * (1 - sizeRatio) + normal.y * force * sizeRatio;
+    }
+}
+
 class DragForce {
     constructor(coefficient) {
         this.coefficient = coefficient;
@@ -307,25 +334,23 @@ class PlayerMovementForce {
     }
 
     apply(particle) {
-        if (particle.isPlayer) {
-            let horizontal = 0;
-            let vertical = 0;
-            if (Game.Inputs.Left.isDown) {
-                horizontal -= 1;
-            }
-            if (Game.Inputs.Right.isDown) {
-                horizontal += 1;
-            }
-            if (Game.Inputs.Up.isDown) {
-                vertical -= 1;
-            }
-            if (Game.Inputs.Down.isDown) {
-                vertical += 1;
-            }
-            let direction = new Vector2(horizontal, vertical);
-            direction.normalize();
-            particle.force.x += direction.x * Game.playerSpeed;
-            particle.force.y += direction.y * Game.playerSpeed;
+        let horizontal = 0;
+        let vertical = 0;
+        if (Game.Inputs.Left.isDown) {
+            horizontal -= 1;
         }
+        if (Game.Inputs.Right.isDown) {
+            horizontal += 1;
+        }
+        if (Game.Inputs.Up.isDown) {
+            vertical -= 1;
+        }
+        if (Game.Inputs.Down.isDown) {
+            vertical += 1;
+        }
+        let direction = new Vector2(horizontal, vertical);
+        direction.normalize();
+        particle.force.x += direction.x * Game.player.movementSpeed;
+        particle.force.y += direction.y * Game.player.movementSpeed;
     }
 }

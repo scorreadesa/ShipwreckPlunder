@@ -5,7 +5,6 @@ Game.MousePosition = new Vector2(0, 0);
 Game.width = 960;
 Game.height = 960;
 Game.player = undefined;
-Game.playerSpeed = 50;
 Game.simulationTPS = 60;
 Game.renderFPS = 60;
 Game.simulationInterval = undefined;
@@ -13,7 +12,26 @@ Game.lastTimestamp = -1;
 Game.useStableDeltas = true; // If false uses exact high-res clock to calculate deltas, if true uses 1/TPS. Eliminates debug line flickering if enabled.
 Game.paused = false;
 
-Game.cannonCooldown = 1;
+Game.config = {};
+Game.config.healingPerPlank = 20;
+Game.config.excessHealingScoreMultiplier = 1;
+Game.config.vortexDamagePerSecond = 10;
+Game.config.vortexSelfDamageMultiplier = 0.001;
+Game.config.vortexMagnitudeLossPerSecond = 0.01;
+Game.config.vortexScaleMagnitudeRatio = 0.5;
+Game.config.vortexPowerMagnitudeRatio = 40;
+Game.config.vortexSizeMagnitudeRatio = 100;
+Game.config.plunderValues = [50, 100, 200];
+Game.config.barrelPlanks = 3;
+Game.config.barrelExplosionPower = 5;
+Game.config.barrelExplosionPushback = 150;
+Game.config.barrelExplosionDamage = 75;
+Game.config.shipPartDurability = 10;
+Game.config.shipPartPlanks = 10;
+Game.config.shipPartBarrels = 3;
+
+Game.score = 0;
+Game.plunder = 0;
 
 Game.Inputs = {}
 Game.Inputs.Left = undefined;
@@ -28,6 +46,7 @@ Game.Forces = [];
 Game.Motion = [];
 
 Game.Init = Init;
+Game.GameOver = GameOver;
 Game.SetSimulationTPS = SetSimulationTPS;
 Game.SetRenderFPS = SetRenderFPS;
 Game.SetStableDeltas = SetStableDeltas;
@@ -46,7 +65,7 @@ function Init() {
     PIXI.settings.FILTER_MULTISAMPLE = PIXI.MSAA_QUALITY.HIGH;
     PIXI.settings.SORTABLE_CHILDREN = true;
 
-    UI.Init();
+    UI.InitSidebar();
     LoadAssets();
     ParticleDynamics.Init();
     VoronoiFracture.Init();
@@ -57,12 +76,6 @@ function LoadAssets() {
     Game.PIXIApp = new PIXI.Application({width: Game.width, height: Game.height, backgroundColor: 0x1099bb});
     UI.Elements.game.appendChild(Game.PIXIApp.view); // TODO: Once window decoration is here, attach in a way that fits
 
-    Game.PIXIApp.ticker.minFPS = 0;
-    Game.PIXIApp.ticker.maxFPS = Game.renderFPS;
-    if (!Game.paused) {
-        Game.SetSimulationTPS(Game.simulationTPS);
-    }
-
     Game.PIXIApp.stage.interactive = true;
     Game.PIXIApp.stage.on("mousemove", (event) => {
         Game.MousePosition.x = event.data.global.x;
@@ -70,25 +83,41 @@ function LoadAssets() {
     });
 
     VoronoiFracture.RegisterTexture("plank", "assets/plank.png");
+    VoronoiFracture.RegisterTexture("ship1", "assets/ship1.png");
     VoronoiFracture.RegisterTexture("ship2", "assets/ship2.png");
+    VoronoiFracture.RegisterTexture("ship3", "assets/ship3.png");
+    VoronoiFracture.RegisterTexture("barrel", "assets/barrel.png");
+    VoronoiFracture.RegisterTexture("barrel_gunpowder", "assets/barrel_gunpowder.png");
 
     loader.add("player", "assets/pirate.png");
     loader.add("cannonball", "assets/cannonball.png");
     loader.add("plank", "assets/plank.png");
+    loader.add("ship1", "assets/ship1w.png");
     loader.add("ship2", "assets/ship2w.png");
+    loader.add("ship3", "assets/ship3w.png");
     loader.add("barrel", "assets/barrel.png");
+    loader.add("barrel_gunpowder", "assets/barrel_gunpowder.png");
     loader.add("vortex", "assets/vortex.png");
+    loader.add("treasure_low", "assets/treasure_low.png");
+    loader.add("treasure_mid", "assets/treasure_mid.png");
+    loader.add("treasure_high", "assets/treasure_high.png");
     loader.load(Setup);
 }
 
 function Setup() {
     ParticleDynamics.Forces.push(new DragForce(0.5));
-    ParticleDynamics.Forces.push(new PlayerMovementForce());
     CreatePlayer();
+    UI.InitHUD();
+
+    Game.PIXIApp.ticker.minFPS = 0;
+    Game.PIXIApp.ticker.maxFPS = Game.renderFPS;
+    if (!Game.paused) {
+        Game.SetSimulationTPS(Game.simulationTPS);
+    }
 }
 
 function CreatePlayer() {
-    Game.player = new Player(500, 500);
+    Game.player = new Player(Game.width / 2, Game.height / 2);
 
     // https://github.com/kittykatattack/learningPixi
     Game.Inputs.Left = SetupKey("a");
@@ -96,18 +125,33 @@ function CreatePlayer() {
     Game.Inputs.Right = SetupKey("d");
     Game.Inputs.Down = SetupKey("s");
     Game.Inputs.Space = SetupKey(" ");
+    Game.Inputs.SpawnTreasure = SetupKey("t");
+    Game.Inputs.SpawnBarrel = SetupKey("b");
+    Game.Inputs.SpawnBarrelExplosive = SetupKey("e");
 
     Game.Inputs.Space.press = function () {
         Game.player.shoot();
     }
+
+    Game.Inputs.SpawnTreasure.press = function () {
+        new Treasure(Math.random() * Game.width, Math.random() * Game.height, 1 + Math.round(Math.random() * 2));
+    }
+
+    Game.Inputs.SpawnBarrel.press = function () {
+        new Barrel(Math.random() * Game.width, Math.random() * Game.height, false);
+    }
+
+    Game.Inputs.SpawnBarrelExplosive.press = function () {
+        new Barrel(Math.random() * Game.width, Math.random() * Game.height, true);
+    }
 }
 
 function CreateVortex() {
-    new Vortex(Math.random() * Game.width, Math.random() * Game.height);
+    new Vortex(Math.random() * Game.width, Math.random() * Game.height, 3);
 }
 
 function CreateShipPart() {
-    new ShipPart(200, 500);
+    new ShipPart(200, 500, 1 + Math.round(Math.random() * 2));
 }
 
 function CreatePlank() {
@@ -134,7 +178,7 @@ function Tick() {
         delta = (window.performance.now() - Game.lastTimestamp) * 0.001;
     }
     Game.lastTimestamp = window.performance.now();
-    UI.UpdateInterface();
+    UI.UpdateInterface(delta);
     SimulationUpdate(delta);
 }
 
@@ -161,6 +205,10 @@ function SimulationUpdate(delta) {
     })
 
     ParticleDynamics.UpdateDebug(delta);
+}
+
+function GameOver() {
+    console.log("You are dead! Not big surprise.")
 }
 
 function SetSimulationTPS(tps) {

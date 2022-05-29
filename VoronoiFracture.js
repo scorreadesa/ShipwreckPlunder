@@ -35,7 +35,7 @@ function RegisterTexture(name, path) {
     })
 }
 
-function FractureSprite(sprite, textureName, point, force) {
+function FractureSprite(sprite, textureName, point, force, fade) {
     let data = VoronoiFracture.ImageBuffer[textureName];
     let width = data.data.width;
     let height = data.data.height;
@@ -170,7 +170,7 @@ function FractureSprite(sprite, textureName, point, force) {
         let x = sprite.x + offset.x;
         let y = sprite.y + offset.y;
 
-        let frag = new Fragment(x, y, s, 3);
+        let frag = new Fragment(x, y, s, fade);
 
         let forceVector = new Vector2(x - center.x, y - center.y);
         forceVector.normalize();
