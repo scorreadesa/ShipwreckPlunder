@@ -74,4 +74,13 @@ class Vector2 {
         this.x = Math.cos(radians) * tempX - Math.sin(radians) * tempY;
         this.y = Math.sin(radians) * tempX + Math.cos(radians) * tempY;
     }
+
+    getRotationAngle() {
+        let norm = this.normalized();
+        let angle = Math.asin(norm.y / (Math.sqrt(norm.x * norm.x + norm.y * norm.y))) * (180 / Math.PI);
+        if (norm.x <= 0) {
+            angle = 180 - angle;
+        }
+        return angle;
+    }
 }

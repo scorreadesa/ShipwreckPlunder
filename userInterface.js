@@ -96,6 +96,11 @@ function InitGameHUD() {
     UI.HUD.textArea.addChild(textPlunder);
     UI.HUD.textArea.plunder = textPlunder;
 
+    AddUpgradeText(120, "health");
+    AddUpgradeText(140, "speed");
+    AddUpgradeText(160, "cannon");
+    AddUpgradeText(180, "resist");
+
     UI.HUD.healthBar.zIndex = 9999;
     UI.HUD.cannonCooldown.zIndex = 9999;
     UI.HUD.textArea.zIndex = 9999;
@@ -104,10 +109,25 @@ function InitGameHUD() {
     Game.PIXIApp.stage.addChild(UI.HUD.textArea);
 }
 
+function AddUpgradeText(y, name) {
+    let textUpgrade = new PIXI.Text("", {
+        fontFamily: "Arial",
+        fontSize: 20,
+        fill: "black",
+    });
+    textUpgrade.position.set(10, y);
+    UI.HUD.textArea.addChild(textUpgrade);
+    UI.HUD.textArea[name] = textUpgrade;
+}
+
 function UpdateInterface(delta) {
     UpdateHealthBar();
     UpdateCannonCooldown();
     UpdateTextArea();
+    UpdateUpgradeText("1", UI.HUD.textArea.health, Game.upgrades.health);
+    UpdateUpgradeText("2", UI.HUD.textArea.speed, Game.upgrades.speed);
+    UpdateUpgradeText("3", UI.HUD.textArea.cannon, Game.upgrades.cannonCooldown);
+    UpdateUpgradeText("4", UI.HUD.textArea.resist, Game.upgrades.explosionResist);
 }
 
 function UpdateHealthBar() {
@@ -139,6 +159,12 @@ function UpdateCannonCooldown() {
 function UpdateTextArea() {
     UI.HUD.textArea.score.text = "Score: " + Math.round(Game.score);
     UI.HUD.textArea.plunder.text = "Plunder: " + Math.round(Game.plunder);
+}
+
+function UpdateUpgradeText(key, text, upgrade) {
+    let current = upgrade.display[upgrade.level + 1];
+    let hasNext = upgrade.level + 1 < upgrade.values.length;
+    text.text = key + ": " + upgrade.label + " " + current + (hasNext ? " -> " + upgrade.display[upgrade.level + 2] + " (" + upgrade.costs[upgrade.level + 1] + ")" : " (MAX)");
 }
 
 function ApplyTPS() {

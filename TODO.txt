@@ -21,8 +21,6 @@ Motion Blur:
 
 
 Gameplay:
-    Upgrades
-    Birds
     Spawning
     Menu Screen
     Score Screen

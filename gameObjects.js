@@ -67,12 +67,13 @@ class Player extends GameObject {
         this.sprite.anchor.set(0.408, 0.5);
         this.sprite.zIndex = 999;
 
-        this.cannonCooldownTime = 1;
+        this.cannonCooldownTime = Game.upgrades.cannonCooldown.default;
         this.cannonCooldown = 0;
-        this.maxHP = 100;
+        this.maxHP = Game.upgrades.health.default;
         this.currentHP = this.maxHP;
         this.pickupRange = 50;
-        this.movementSpeed = 50;
+        this.movementSpeed = Game.upgrades.speed.default;
+        this.explosionDamageTaken = Game.upgrades.explosionResist.default;
     }
 
     update(delta) {
@@ -80,12 +81,7 @@ class Player extends GameObject {
         this.sprite.x = this.particle.pos.x;
         this.sprite.y = this.particle.pos.y;
         let look = Game.MousePosition.subtractPure(this.particle.pos);
-        look.normalize();
-        let angle = Math.asin(look.y / (Math.sqrt(look.x * look.x + look.y * look.y))) * (180 / Math.PI);
-        if (look.x <= 0) {
-            angle = 180 - angle;
-        }
-        this.sprite.angle = angle;
+        this.sprite.angle = look.getRotationAngle();
 
         if (this.cannonCooldown > 0) {
             this.cannonCooldown -= delta;
@@ -104,7 +100,10 @@ class Player extends GameObject {
         new Cannonball(this.sprite.x + direction.x * scaling, this.sprite.y + direction.y * scaling, direction, 25);
     }
 
-    damage(amount) {
+    damage(amount, explosive = false) {
+        if(explosive) {
+            amount *= this.explosionDamageTaken;
+        }
         this.currentHP -= amount;
         if (this.currentHP <= 0) {
             Game.GameOver();
@@ -118,6 +117,11 @@ class Player extends GameObject {
 
     fortify(amount) {
         this.maxHP += amount;
+    }
+
+    destroy() {
+        super.destroy();
+        this.particle.clearTracking();
     }
 }
 
@@ -267,7 +271,7 @@ class Treasure extends GameObject {
 }
 
 class Barrel extends GameObject {
-    constructor(x, y, explosive) {
+    constructor(x, y, explosive, fade = true) {
         let scale = 0.5;
         super(x, y, new PIXI.Sprite(explosive ? Game.Resources.barrel_gunpowder.texture : Game.Resources.barrel.texture), 82 * scale);
         this.explosive = explosive;
@@ -277,7 +281,9 @@ class Barrel extends GameObject {
         this.sprite.angle = Math.random() * 360;
         this.sprite.interactive = true;
         this.health = 50;
-        this.fadeIn(1, scale * 0.8, scale);
+        if(fade) {
+            this.fadeIn(1, scale * 0.8, scale);
+        }
     }
 
     update(delta) {
@@ -322,7 +328,7 @@ class Barrel extends GameObject {
                         object.particle.addImpulse(dir);
                     }
                     if("damage" in object) {
-                        object.damage(Game.config.barrelExplosionDamage);
+                        object.damage(Game.config.barrelExplosionDamage, true);
                     }
                     return;
                 }
@@ -381,6 +387,11 @@ class ShipPart extends GameObject {
         // Empty method, diminishes vortexes but can't be destroyed by them
     }
 
+    destroy() {
+        super.destroy();
+        this.particle.clearTracking();
+    }
+
     cannonHit(point) {
         this.durability--;
         if(this.durability <= 0) {
@@ -402,7 +413,7 @@ class ShipPart extends GameObject {
                 dir.scalarMultiply(25);
                 barrel.particle.addImpulse(dir);
             }
-            super.destroy();
+            this.destroy()
         }
     }
 }
@@ -424,6 +435,8 @@ class Vortex extends GameObject {
 
     update(delta) {
         this.sprite.angle += -90 * delta;
+
+        // TODO: Replace with path interpolation update
         this.force.center.x += this.motion.x * delta;
         this.force.center.y += this.motion.y * delta;
 
@@ -469,5 +482,190 @@ class Vortex extends GameObject {
         ParticleDynamics.Forces = ParticleDynamics.Forces.filter((obj) => {
             return obj !== this.force
         });
+    }
+}
+
+class Bird extends GameObject {
+    constructor(x, y, type) { // TODO: Change constructor to just type since birds spawn off screen
+        let textures = [];
+        if(type === 0) {
+            textures.push(Game.Resources.birdGreen1.texture);
+            textures.push(Game.Resources.birdGreen2.texture);
+            textures.push(Game.Resources.birdGreen3.texture);
+        } else if(type === 1) {
+            textures.push(Game.Resources.birdRed1.texture);
+            textures.push(Game.Resources.birdRed2.texture);
+            textures.push(Game.Resources.birdRed3.texture);
+        } else if(type === 2) {
+            textures.push(Game.Resources.birdBlue1.texture);
+            textures.push(Game.Resources.birdBlue2.texture);
+            textures.push(Game.Resources.birdBlue3.texture);
+        } else {
+            console.log("Unknown bird type " + type);
+        }
+        super(x, y, new PIXI.Sprite(textures[0]), 0);
+        this.textures = textures;
+        this.sprite.scale.set(1);
+        this.sprite.anchor.set(0.5);
+        this.animationState = 0;
+        this.animationTimer = 0.5;
+        // TODO: Replace with path interpolation
+        this.moveSpeed = 50;
+        this.motion = new Vector2((Math.random() * 2 - 1), (Math.random() * 2 - 1))
+        this.motion.normalize();
+        this.sprite.angle = this.motion.getRotationAngle();
+        this.sprite.zIndex = 1000;
+    }
+
+    update(delta) {
+        this.animationTimer -= delta;
+        if(this.animationTimer <= 0) {
+            this.animationTimer = 0.5;
+            switch (this.animationState) {
+                case 0: { // Wings up, going down
+                    this.sprite.texture = this.textures[1];
+                    this.animationState++;
+                    break;
+                }
+                case 1: { // Wings middle, going down
+                    this.sprite.texture = this.textures[2];
+                    this.animationState++;
+                    break;
+                }
+                case 2: { // Wings down, going up
+                    this.sprite.texture = this.textures[1];
+                    this.animationState++;
+                    break;
+                }
+                case 3: { // Wings middle, going up
+                    this.sprite.texture = this.textures[0];
+                    this.animationState = 0;
+                    break;
+                }
+            }
+        }
+
+        // TODO: Replace with path interpolation update
+        this.sprite.x += this.motion.x * this.moveSpeed * delta;
+        this.sprite.y += this.motion.y * this.moveSpeed * delta;
+
+        if (this.sprite.x < 0) {
+            this.sprite.x += Game.width;
+        } else if (this.sprite.x > Game.width) {
+            this.sprite.x -= Game.width;
+        }
+
+        if (this.sprite.y < 0) {
+            this.sprite.y += Game.height;
+        } else if (this.sprite.y > Game.height) {
+            this.sprite.y -= Game.height;
+        }
+    }
+}
+
+class CoconutBird extends Bird {
+    constructor(x, y) {
+        super(x, y, 2);
+        this.hasCoconut = true;
+        this.moveSpeed = 75;
+    }
+
+    update(delta) {
+        super.update(delta);
+        if(!this.hasCoconut) {
+            return;
+        }
+        let playerVec = Game.player.particle.pos.subtractPure(new Vector2(this.sprite.x, this.sprite.y));
+        let distanceToPlayer = playerVec.magnitude();
+        playerVec.normalize();
+        if(distanceToPlayer < Game.config.birdCoconutRange) {
+            this.hasCoconut = false;
+            playerVec.rotate((Math.random() - 0.5) * 40);
+            new Coconut(this.sprite.x, this.sprite.y, playerVec);
+        }
+    }
+}
+
+class BarrelBird extends Bird {
+    constructor(x, y) {
+        super(x, y, 1);
+        this.moveSpeed = 25;
+        this.hasBarrel = true;
+        this.barrelSprite = new PIXI.Sprite(Game.Resources.barrel_gunpowder.texture);
+        this.barrelSprite.anchor.set(0.5);
+        this.barrelSprite.scale.set(0.5);
+        this.barrelSprite.zIndex = 999;
+        this.barrelSprite.angle = this.sprite.angle;
+        Game.PIXIApp.stage.addChild(this.barrelSprite);
+    }
+
+    update(delta) {
+        super.update(delta);
+        if(this.hasBarrel) {
+            this.barrelSprite.x = this.sprite.x;
+            this.barrelSprite.y = this.sprite.y;
+            this.barrelSprite.angle = this.sprite.angle;
+            if(Math.random() > 0.99) { // TODO: Replace with point on curve
+                this.hasBarrel = false;
+                this.moveSpeed = 75;
+                let barrel = new Barrel(this.sprite.x, this.sprite.y, true, false);
+                barrel.sprite.angle = this.sprite.angle;
+                Game.PIXIApp.stage.removeChild(this.barrelSprite);
+            }
+        }
+    }
+}
+
+class Coconut extends GameObject {
+    constructor(x, y, direction) {
+        let scale = 0.5;
+        super(x, y, new PIXI.Sprite(Game.Resources.coconut.texture), 30 * scale);
+        this.sprite.scale.set(scale);
+        this.sprite.anchor.set(0.5);
+        this.sprite.angle = Math.random() * 360;
+        this.sprite.interactive = true;
+        this.health = 1;
+        this.sprite.on('pointerdown', () => { // Pickup Handler
+            let distance = Distance(this.sprite.x, this.sprite.y, Game.player.sprite.x, Game.player.sprite.y);
+            if(distance <= Game.player.pickupRange + this.collisionRadius + Game.player.collisionRadius) {
+                Game.score += Game.config.birdCoconutPickupScore;
+                if(this.airtime > 0) {
+                    Game.score += Game.config.birdCoconutCatchBonus;
+                }
+                this.destroy();
+            }
+        });
+        this.airtime = 1;
+        this.speed = 5;
+        this.particle = undefined;
+        this.direction = direction;
+    }
+
+    update(delta) {
+        if(this.airtime > 0) { // Flight
+            this.airtime -= delta * 0.5;
+            if(this.airtime <= 0) {
+                this.particle = new Particle(this.sprite.x, this.sprite.y, 0.5, true);
+                return;
+            }
+            this.sprite.x += this.direction.x * this.speed * this.airtime;
+            this.sprite.y += this.direction.y * this.speed * this.airtime;
+            if(Game.CheckCollision(this, Game.player)) {
+                Game.player.damage(Game.config.birdCoconutDamage);
+                this.destroy();
+            }
+            return;
+        }
+        // In Water
+        ParticleDynamics.UpdateParticle(this.particle, delta);
+        this.sprite.x = this.particle.pos.x;
+        this.sprite.y = this.particle.pos.y;
+    }
+
+    destroy() {
+        super.destroy();
+        if(this.particle !== undefined) {
+            this.particle.clearTracking();
+        }
     }
 }

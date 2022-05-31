@@ -29,6 +29,40 @@ Game.config.barrelExplosionDamage = 75;
 Game.config.shipPartDurability = 10;
 Game.config.shipPartPlanks = 10;
 Game.config.shipPartBarrels = 3;
+Game.config.birdCoconutRange = 300;
+Game.config.birdCoconutDamage = 10;
+Game.config.birdCoconutPickupScore = 25;
+Game.config.birdCoconutCatchBonus = 125;
+
+Game.upgrades = {};
+Game.upgrades.cannonCooldown = {};
+Game.upgrades.cannonCooldown.label = "Cannon Cooldown";
+Game.upgrades.cannonCooldown.default = 7;
+Game.upgrades.cannonCooldown.values = [5, 3, 1];
+Game.upgrades.cannonCooldown.costs = [50, 50, 50];
+Game.upgrades.cannonCooldown.display = ["7s", "5s", "3s", "1s"];
+Game.upgrades.cannonCooldown.level = -1;
+Game.upgrades.health = {};
+Game.upgrades.health.label = "Health";
+Game.upgrades.health.default = 100;
+Game.upgrades.health.values = [150, 200, 250];
+Game.upgrades.health.costs = [50, 50, 50];
+Game.upgrades.health.display = ["100", "150", "200", "250"];
+Game.upgrades.health.level = -1;
+Game.upgrades.speed = {};
+Game.upgrades.speed.label = "Speed";
+Game.upgrades.speed.default = 50;
+Game.upgrades.speed.values = [75, 100, 125];
+Game.upgrades.speed.costs = [50, 50, 50];
+Game.upgrades.speed.display = ["100%", "150%", "200%", "250%"];
+Game.upgrades.speed.level = -1;
+Game.upgrades.explosionResist = {};
+Game.upgrades.explosionResist.label = "Explosion Resist";
+Game.upgrades.explosionResist.default = 1;
+Game.upgrades.explosionResist.values = [0.5, 0];
+Game.upgrades.explosionResist.costs = [50, 50, 50];
+Game.upgrades.explosionResist.display = ["0%", "50%", "100%"];
+Game.upgrades.explosionResist.level = -1;
 
 Game.score = 0;
 Game.plunder = 0;
@@ -51,6 +85,7 @@ Game.SetSimulationTPS = SetSimulationTPS;
 Game.SetRenderFPS = SetRenderFPS;
 Game.SetStableDeltas = SetStableDeltas;
 Game.GetCollidingObjects = GetCollidingObjects;
+Game.CheckCollision = CheckCollision;
 Game.Pause = Pause;
 Game.Unpause = Unpause;
 Game.Step = Step;
@@ -91,6 +126,7 @@ function LoadAssets() {
 
     loader.add("player", "assets/pirate.png");
     loader.add("cannonball", "assets/cannonball.png");
+    loader.add("coconut", "assets/coconut.png");
     loader.add("plank", "assets/plank.png");
     loader.add("ship1", "assets/ship1w.png");
     loader.add("ship2", "assets/ship2w.png");
@@ -101,6 +137,15 @@ function LoadAssets() {
     loader.add("treasure_low", "assets/treasure_low.png");
     loader.add("treasure_mid", "assets/treasure_mid.png");
     loader.add("treasure_high", "assets/treasure_high.png");
+    loader.add("birdGreen1", "assets/birdGreen1.png");
+    loader.add("birdGreen2", "assets/birdGreen2.png");
+    loader.add("birdGreen3", "assets/birdGreen3.png");
+    loader.add("birdRed1", "assets/birdRed1.png");
+    loader.add("birdRed2", "assets/birdRed2.png");
+    loader.add("birdRed3", "assets/birdRed3.png");
+    loader.add("birdBlue1", "assets/birdBlue1.png");
+    loader.add("birdBlue2", "assets/birdBlue2.png");
+    loader.add("birdBlue3", "assets/birdBlue3.png");
     loader.load(Setup);
 }
 
@@ -125,12 +170,34 @@ function CreatePlayer() {
     Game.Inputs.Right = SetupKey("d");
     Game.Inputs.Down = SetupKey("s");
     Game.Inputs.Space = SetupKey(" ");
+    Game.Inputs.UpgradeHealth = SetupKey("1");
+    Game.Inputs.UpgradeSpeed = SetupKey("2");
+    Game.Inputs.UpgradeCannon = SetupKey("3");
+    Game.Inputs.UpgradeResist = SetupKey("4");
+
     Game.Inputs.SpawnTreasure = SetupKey("t");
     Game.Inputs.SpawnBarrel = SetupKey("b");
     Game.Inputs.SpawnBarrelExplosive = SetupKey("e");
+    Game.Inputs.SpawnBird = SetupKey("f");
 
     Game.Inputs.Space.press = function () {
         Game.player.shoot();
+    }
+
+    Game.Inputs.UpgradeHealth.press = function () {
+        Game.player.maxHP = GetUpgradeValue(Game.upgrades.health);
+    }
+
+    Game.Inputs.UpgradeSpeed.press = function () {
+        Game.player.movementSpeed = GetUpgradeValue(Game.upgrades.speed);
+    }
+
+    Game.Inputs.UpgradeCannon.press = function () {
+        Game.player.cannonCooldownTime = GetUpgradeValue(Game.upgrades.cannonCooldown);
+    }
+
+    Game.Inputs.UpgradeResist.press = function () {
+        Game.player.explosionDamageTaken = GetUpgradeValue(Game.upgrades.explosionResist);
     }
 
     Game.Inputs.SpawnTreasure.press = function () {
@@ -144,6 +211,19 @@ function CreatePlayer() {
     Game.Inputs.SpawnBarrelExplosive.press = function () {
         new Barrel(Math.random() * Game.width, Math.random() * Game.height, true);
     }
+
+    Game.Inputs.SpawnBird.press = function () {
+        new BarrelBird(Math.random() * Game.width, Math.random() * Game.height);
+    }
+}
+
+function GetUpgradeValue(upgrade) {
+    if(upgrade.level + 1 >= upgrade.values.length || Game.plunder < upgrade.costs[upgrade.level + 1]) {
+        return upgrade.values[upgrade.level];
+    }
+    upgrade.level++;
+    Game.plunder -= upgrade.costs[upgrade.level];
+    return upgrade.values[upgrade.level];
 }
 
 function CreateVortex() {
@@ -278,6 +358,16 @@ function GetCollidingObjects(obj) {
         }
     });
     return objects;
+}
+
+function CheckCollision(obj1, obj2) {
+    let xDelta = obj1.sprite.x - obj2.sprite.x;
+    let yDelta = obj1.sprite.y - obj2.sprite.y;
+    let distance = Math.sqrt(xDelta * xDelta + yDelta * yDelta);
+    if (distance < obj1.collisionRadius + obj2.collisionRadius) {
+        return true;
+    }
+    return false;
 }
 
 // https://github.com/kittykatattack/learningPixi#introduction
