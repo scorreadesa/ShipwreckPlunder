@@ -299,6 +299,27 @@ class RadialForce {
     }
 }
 
+class OutOfBoundsForce {
+    constructor(power) {
+        this.power = power;
+    }
+
+    apply(particle) {
+        if(particle.pos.x < 0) {
+            particle.force.x += this.power;
+        }
+        if(particle.pos.y < 0) {
+            particle.force.y += this.power;
+        }
+        if(particle.pos.x > Game.width) {
+            particle.force.x -= this.power;
+        }
+        if(particle.pos.y > Game.height) {
+            particle.force.y -= this.power;
+        }
+    }
+}
+
 class VortexForce {
     constructor(x, y, power, size) {
         this.center = new Vector2(x, y);

@@ -425,6 +425,7 @@ class Vortex extends GameObject {
         this.magnitude = magnitude;
         this.sprite.scale.set(scale);
         this.sprite.anchor.set(0.5);
+        this.sprite.zIndex = -1;
         this.force = new VortexForce(x, y, Game.config.vortexPowerMagnitudeRatio * magnitude, Game.config.vortexSizeMagnitudeRatio * magnitude);
         ParticleDynamics.Forces.push(this.force);
 

@@ -151,6 +151,7 @@ function LoadAssets() {
 
 function Setup() {
     ParticleDynamics.Forces.push(new DragForce(0.5));
+    ParticleDynamics.Forces.push(new OutOfBoundsForce(150));
     CreatePlayer();
     UI.InitHUD();
 
