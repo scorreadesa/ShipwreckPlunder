@@ -15,13 +15,17 @@ Path Interpolation:
     Vortex/enemies follow path interpolation.
 
 Voronoi Fracture:
-    Maybe optimize, maybe slap the expensive fracturing and cell processing into a web worker.
+    DONE
 
 Motion Blur:
 
 
 Gameplay:
-
+    Spawning
+    Menu Screen
+    Score Screen
 
 Polish:
-    Improve look of side panel with CSS magic.
+    Check zIndex across different sprite types
+    Current particles
+    Explosion VFX
