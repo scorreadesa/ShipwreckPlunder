@@ -263,7 +263,7 @@ function DrawSpline() {
     let cmr = new CatmullRom(0.001);
     cmr.addPoints(control_points);
     cmr.draw();
-    console.log("curve_length: ", cmr.getCurveLength());
+    //console.log("curve_length: ", cmr.getCurveLength());
 }
 
 function Tick() {

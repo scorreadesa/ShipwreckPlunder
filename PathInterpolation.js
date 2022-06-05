@@ -28,6 +28,49 @@ class ArcLengthTable {
         lookup_entry.arc_length_value = arc_length_value;
         this.parametric_arclength_map.push(lookup_entry);
     }
+
+    bsearch_closest(val)
+    {
+        let first = this.parametric_arclength_map[0].arc_length_value;
+        let last = this.parametric_arclength_map[this.parametric_arclength_map.length - 1].arc_length_value;
+        if(val < first || val > last)
+        {
+            return undefined;
+        }
+
+        let answer = {}
+        answer.best_distance = Math.abs(val - this.parametric_arclength_map[0].arc_length_value);
+        answer.idx = 0;
+        answer.parametric_value = this.parametric_arclength_map[0].parametric_value;
+        answer.arc_length_value = this.parametric_arclength_map[0].arc_length_value;
+
+        let lower = 0, upper = this.parametric_arclength_map.length - 1;
+
+        while(lower <= upper)
+        {
+            let mid = Math.floor((lower + upper) / 2);
+            let found = this.parametric_arclength_map[mid];
+            let distance = Math.abs(val - found.arc_length_value);
+            if(distance < answer.best_distance)
+            {
+                answer.best_distance = distance;
+                answer.idx = mid;
+                answer.parametric_value = found.parametric_value;
+                answer.arc_length_value = found.arc_length_value;
+                //console.log(JSON.stringify(answer));
+            }
+            else if(found.arc_length_value < val)
+            {
+                lower = mid + 1;
+            }
+            else
+            {
+                upper = mid - 1;
+            }
+        }
+
+        return answer;
+    }
 }
 
 class CatmullRom {
@@ -74,8 +117,9 @@ class CatmullRom {
     {
         /**
          * needs interpolateBetween
+         * function stub
          */
-        return {}
+        return {};
     }
 
     computeArcLengthTable()
@@ -188,7 +232,7 @@ class CatmullRom {
         this.points.push(point);
     }
 
-    addPoints(points, debug=true)
+    addPoints(points, debug=false)
     {
         for(const point of points)
         {
@@ -207,6 +251,12 @@ class CatmullRom {
             if(debug)
             {
                 this.arcLengthTable.show();
+                console.log(JSON.stringify(this.arcLengthTable.bsearch_closest(-1.45)));
+                console.log(JSON.stringify(this.arcLengthTable.bsearch_closest(325)));
+                console.log(JSON.stringify(this.arcLengthTable.bsearch_closest(319.2)));
+                console.log(JSON.stringify(this.arcLengthTable.bsearch_closest(265.915)));
+                console.log(JSON.stringify(this.arcLengthTable.bsearch_closest(0)));
+                console.log(JSON.stringify(this.arcLengthTable.bsearch_closest(321.024)));
             }
         }
     }
