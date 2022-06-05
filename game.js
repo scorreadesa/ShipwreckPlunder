@@ -81,6 +81,7 @@ Game.Motion = [];
 
 // Temporary for PathInterpolation testing
 Game.CatmullRomDebug = undefined;
+Game.graphics = undefined;
 
 Game.AddPoint = AddPoint;
 Game.DrawControlPoints = DrawControlPoints;
@@ -123,6 +124,9 @@ function LoadAssets() {
         Game.MousePosition.x = event.data.global.x;
         Game.MousePosition.y = event.data.global.y;
     });
+
+    Game.graphics = new PIXI.Graphics();
+    Game.PIXIApp.stage.addChild(Game.graphics);
 
     VoronoiFracture.RegisterTexture("plank", "assets/plank.png");
     VoronoiFracture.RegisterTexture("ship1", "assets/ship1.png");
@@ -182,10 +186,10 @@ function CreatePlayer() {
     Game.Inputs.Right = SetupKey("d");
     Game.Inputs.Down = SetupKey("s");
     Game.Inputs.Space = SetupKey(" ");
-    Game.Inputs.UpgradeHealth = SetupKey("1");
-    Game.Inputs.UpgradeSpeed = SetupKey("2");
-    Game.Inputs.UpgradeCannon = SetupKey("3");
-    Game.Inputs.UpgradeResist = SetupKey("4");
+    Game.Inputs.UpgradeHealth = SetupKey("o");
+    Game.Inputs.UpgradeSpeed = SetupKey("p");
+    Game.Inputs.UpgradeCannon = SetupKey("k");
+    Game.Inputs.UpgradeResist = SetupKey("l");
 
     Game.Inputs.SpawnTreasure = SetupKey("t");
     Game.Inputs.SpawnBarrel = SetupKey("b");
@@ -251,15 +255,15 @@ function CreatePlank() {
 }
 
 function DrawSpline() {
-    let control_points = [new Vector2(20, 20), new Vector2(90, 80), new Vector2(120, 150),
-        new Vector2(200, 180), new Vector2(250, 220), new Vector2(280, 250), new Vector2(290, 300)];
-    let cmr = new CatmullRom(0.25);
+    let control_points = [//new Vector2(60, 320),
+        new Vector2(20, 420), new Vector2(90, 480), new Vector2(120, 550), new Vector2(200, 580),
+        new Vector2(250, 620), new Vector2(280, 650), new Vector2(290, 700), new Vector2(320, 790),
+        //new Vector2(380, 850)
+    ];
+    let cmr = new CatmullRom(0.001);
     cmr.addPoints(control_points);
-    let more_control_points = [new Vector2(350, 420), new Vector2(250, 300), new Vector2(120, 180)];
-    cmr.addPoints(more_control_points);
-    cmr.addPoint(new Vector2(40, 80));
-    cmr.addPoint(new Vector2(90, 80));
-    cmr.addPoint(new Vector2(20, 20));
+    cmr.draw();
+    console.log("curve_length: ", cmr.getCurveLength());
 }
 
 function Tick() {
@@ -446,6 +450,7 @@ function DrawControlPoints()
 {
     if(Game.CatmullRomDebug) {
         const points = Game.CatmullRomDebug.getPoints();
+        console.log(points);
         drawPoints(points);
     }
 }
