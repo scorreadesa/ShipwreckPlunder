@@ -29,7 +29,7 @@ class ArcLengthTable {
         this.parametric_arclength_map.push(lookup_entry);
     }
 
-    bsearch_closest(val)
+    bsearchClosest(val)
     {
         let first = this.parametric_arclength_map[0].arc_length_value;
         let last = this.parametric_arclength_map[this.parametric_arclength_map.length - 1].arc_length_value;
@@ -57,7 +57,6 @@ class ArcLengthTable {
                 answer.idx = mid;
                 answer.parametric_value = found.parametric_value;
                 answer.arc_length_value = found.arc_length_value;
-                //console.log(JSON.stringify(answer));
             }
             else if(found.arc_length_value < val)
             {
@@ -70,6 +69,42 @@ class ArcLengthTable {
         }
 
         return answer;
+    }
+
+    withinEpsilon(a, b, eps=0.001)
+    {
+        return Math.abs(a - b) < eps;
+    }
+
+    tableLookup(pt)
+    {
+        let ans = this.bsearchClosest(pt);
+        let ret = undefined
+
+        if(ans !== undefined)
+        {
+            if (ans.arc_length_value !== pt && ans.idx < this.parametric_arclength_map.length - 1)
+            {
+                let next_val = this.parametric_arclength_map[ans.idx + 1];
+                let interpolated_arc_length = (ans.arc_length_value + next_val.arc_length_value) / 2;
+                let interpolated_param = (ans.parametric_value + next_val.parametric_value) / 2;
+                let integer_part = Math.floor(interpolated_param);
+                let t = interpolated_param - integer_part;
+                ret = {};
+                ret.idx = integer_part;
+                ret.t = t;
+            }
+            else
+            {
+                let integer_part = Math.floor(ans.parametric_value);
+                let t = ans.parametric_value - integer_part;
+                ret = {};
+                ret.idx = integer_part;
+                ret.t = t;
+            }
+
+            return ret;
+        }
     }
 }
 
@@ -115,11 +150,16 @@ class CatmullRom {
 
     lookUp(pt)
     {
-        /**
-         * needs interpolateBetween
-         * function stub
-         */
-        return {};
+        let ret = this.arcLengthTable.tableLookup(pt);
+        if(ret !== undefined)
+        {
+            let prev = this.points[ret.idx - 1];
+            let current = this.points[ret.idx];
+            let next = this.points[ret.idx + 1];
+            let last = this.points[ret.idx + 2];
+            return this.interpolateBetween(prev, current, next, last, ret.t, 0.5);
+        }
+        return undefined;
     }
 
     computeArcLengthTable()
@@ -251,12 +291,14 @@ class CatmullRom {
             if(debug)
             {
                 this.arcLengthTable.show();
-                console.log(JSON.stringify(this.arcLengthTable.bsearch_closest(-1.45)));
-                console.log(JSON.stringify(this.arcLengthTable.bsearch_closest(325)));
-                console.log(JSON.stringify(this.arcLengthTable.bsearch_closest(319.2)));
-                console.log(JSON.stringify(this.arcLengthTable.bsearch_closest(265.915)));
-                console.log(JSON.stringify(this.arcLengthTable.bsearch_closest(0)));
-                console.log(JSON.stringify(this.arcLengthTable.bsearch_closest(321.024)));
+                let test = this.lookUp(0.0)
+                console.log(JSON.stringify(test));
+                test = this.lookUp(321.0);
+                console.log(JSON.stringify(test));
+                test = this.lookUp(237.61);
+                console.log(JSON.stringify(test));
+                test = this.lookUp(321.024);
+                console.log(JSON.stringify(test));
             }
         }
     }

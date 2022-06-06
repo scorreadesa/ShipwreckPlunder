@@ -186,10 +186,10 @@ function CreatePlayer() {
     Game.Inputs.Right = SetupKey("d");
     Game.Inputs.Down = SetupKey("s");
     Game.Inputs.Space = SetupKey(" ");
-    Game.Inputs.UpgradeHealth = SetupKey("o");
-    Game.Inputs.UpgradeSpeed = SetupKey("p");
-    Game.Inputs.UpgradeCannon = SetupKey("k");
-    Game.Inputs.UpgradeResist = SetupKey("l");
+    Game.Inputs.UpgradeHealth = SetupKey("1");
+    Game.Inputs.UpgradeSpeed = SetupKey("2");
+    Game.Inputs.UpgradeCannon = SetupKey("3");
+    Game.Inputs.UpgradeResist = SetupKey("4");
 
     Game.Inputs.SpawnTreasure = SetupKey("t");
     Game.Inputs.SpawnBarrel = SetupKey("b");
@@ -256,8 +256,8 @@ function CreatePlank() {
 
 function DrawSpline() {
     let control_points = [//new Vector2(60, 320),
-        new Vector2(20, 420), new Vector2(90, 480), new Vector2(120, 550), new Vector2(200, 580),
-        new Vector2(250, 620), new Vector2(280, 650), new Vector2(290, 700), new Vector2(320, 790),
+        new Vector2(90, 480), new Vector2(90, 480), new Vector2(120, 550), new Vector2(200, 580),
+        new Vector2(250, 620), new Vector2(280, 650), new Vector2(290, 700), new Vector2(290, 700),
         //new Vector2(380, 850)
     ];
     let cmr = new CatmullRom(0.001);
