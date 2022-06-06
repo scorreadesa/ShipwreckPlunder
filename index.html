@@ -102,7 +102,11 @@
             <label>Render: </label>
             <button onclick="Game.DrawSplineCurve()">Splines</button>
             <button onclick="Game.DrawControlPoints()">Control Points</button>
-            <button>Arc-Length Table</button>
+        </div>
+        <div class="sidebar-entry">
+            <label>Arc-Length Table</label>
+            <input id="nsamples" class="short" type="number" min="0" step="1">
+            <button onclick="Game.ShowArcLengthTable()">Arc-Length Table</button>
         </div>
         <div class="sidebar-entry">
             <label>Add Point: </label>

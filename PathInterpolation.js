@@ -12,6 +12,17 @@ class ArcLengthTable {
         this.parametric_arclength_map = [];
     }
 
+    getNSamplesFromTable(n)
+    {
+        let samples = [];
+        let end = n >= this.parametric_arclength_map.length ? this.parametric_arclength_map.length - 1 : n;
+        for(let start = 0; start < end; start++)
+        {
+            samples.push(this.parametric_arclength_map[start]);
+        }
+        return samples;
+    }
+
     show()
     {
         console.log("index | parametric value | arc length")
@@ -71,7 +82,7 @@ class ArcLengthTable {
         return answer;
     }
 
-    withinEpsilon(a, b, eps=0.001)
+    withinEpsilon(a, b, eps=1e-6)
     {
         return Math.abs(a - b) < eps;
     }
@@ -86,7 +97,7 @@ class ArcLengthTable {
             if (ans.arc_length_value !== pt && ans.idx < this.parametric_arclength_map.length - 1)
             {
                 let next_val = this.parametric_arclength_map[ans.idx + 1];
-                let interpolated_arc_length = (ans.arc_length_value + next_val.arc_length_value) / 2;
+                //let interpolated_arc_length = (ans.arc_length_value + next_val.arc_length_value) / 2;
                 let interpolated_param = (ans.parametric_value + next_val.parametric_value) / 2;
                 let integer_part = Math.floor(interpolated_param);
                 let t = interpolated_param - integer_part;
@@ -116,6 +127,16 @@ class CatmullRom {
         this.draw_step = draw_step;
         this.arcLengthTable = new ArcLengthTable();
         this.curve_length = 0.0;
+    }
+
+    showArcLengthSamples(n)
+    {
+        let samples = this.arcLengthTable.getNSamplesFromTable(n);
+        for(let start = 0; start < samples.length; start++)
+        {
+            let pt = this.lookUp(samples[start].arc_length_value);
+            console.log(JSON.stringify(samples[start]), JSON.stringify(pt));
+        }
     }
 
     computeCurveLength()
@@ -262,7 +283,7 @@ class CatmullRom {
         }
     }
 
-    addPoint(point)
+    addPoint(point, debug=false)
     {
         if(!(point instanceof Vector2))
         {
@@ -270,6 +291,24 @@ class CatmullRom {
         }
 
         this.points.push(point);
+
+        if(this.points.length >= 4)
+        {
+            this.curve_length = this.computeCurveLength();
+            this.computeArcLengthTable();
+            if(debug)
+            {
+                this.arcLengthTable.show();
+                let test = this.lookUp(0.0)
+                console.log(JSON.stringify(test));
+                test = this.lookUp(321.0);
+                console.log(JSON.stringify(test));
+                test = this.lookUp(237.61);
+                console.log(JSON.stringify(test));
+                test = this.lookUp(321.024);
+                console.log(JSON.stringify(test));
+            }
+        }
     }
 
     addPoints(points, debug=false)

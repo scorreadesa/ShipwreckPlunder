@@ -86,6 +86,7 @@ Game.graphics = undefined;
 Game.AddPoint = AddPoint;
 Game.DrawControlPoints = DrawControlPoints;
 Game.DrawSplineCurve = DrawSplineCurve;
+Game.ShowArcLengthTable = ShowArcLengthTable;
 
 Game.Init = Init;
 Game.GameOver = GameOver;
@@ -255,15 +256,13 @@ function CreatePlank() {
 }
 
 function DrawSpline() {
-    let control_points = [//new Vector2(60, 320),
+    let control_points = [
         new Vector2(90, 480), new Vector2(90, 480), new Vector2(120, 550), new Vector2(200, 580),
         new Vector2(250, 620), new Vector2(280, 650), new Vector2(290, 700), new Vector2(290, 700),
-        //new Vector2(380, 850)
     ];
     let cmr = new CatmullRom(0.001);
     cmr.addPoints(control_points);
     cmr.draw();
-    //console.log("curve_length: ", cmr.getCurveLength());
 }
 
 function Tick() {
@@ -432,18 +431,15 @@ function SetupKey(value) {
 
 function AddPoint()
 {
-
-    /*
-     * general idea, add point to path, interpolate of >= 4 points in the buffer
-     * render control points if button clicked
-     * render splines if button clicked
-     */
     let x = parseFloat(document.getElementById("xcoordinate").value);
     let y = parseFloat(document.getElementById("ycoordinate").value);
     if(!Game.CatmullRomDebug) {
         Game.CatmullRomDebug = new CatmullRom();
     }
-    Game.CatmullRomDebug.addPoint(new Vector2(x, y));
+
+    let new_pt = new Vector2(x, y);
+    console.log("Adding pt ", JSON.stringify(new_pt), " to spline curve.");
+    Game.CatmullRomDebug.addPoint(new_pt);
 }
 
 function DrawControlPoints()
@@ -458,7 +454,14 @@ function DrawControlPoints()
 function DrawSplineCurve()
 {
     if(Game.CatmullRomDebug) {
-        const points = Game.CatmullRomDebug.getPoints();
-        drawSpline(points);
+        Game.CatmullRomDebug.draw();
+    }
+}
+
+function ShowArcLengthTable()
+{
+    if(Game.CatmullRomDebug) {
+        let nsamples = parseFloat(document.getElementById("nsamples").value);
+        Game.CatmullRomDebug.showArcLengthSamples(nsamples);
     }
 }
