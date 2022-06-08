@@ -1,7 +1,9 @@
 UI = {};
 UI.InitSidebar = Init;
 UI.InitHUD = InitGameHUD;
+UI.RemoveHUD = RemoveGameHUD;
 UI.UpdateInterface = UpdateInterface;
+UI.InitResults = InitResultsScreen;
 UI.ApplyTPS = ApplyTPS;
 UI.ApplyFPS = ApplyFPS;
 UI.ApplyDeltas = ApplyDeltas;
@@ -82,7 +84,7 @@ function InitGameHUD() {
     let textScore =  new PIXI.Text("Score: 0", {
         fontFamily: "Arial",
         fontSize: 20,
-        fill: "green",
+        fill: "#88ee00",
     });
     textScore.position.set(10, 80);
     UI.HUD.textArea.addChild(textScore);
@@ -120,14 +122,82 @@ function AddUpgradeText(y, name) {
     UI.HUD.textArea[name] = textUpgrade;
 }
 
+function RemoveGameHUD() {
+    Game.PIXIApp.stage.removeChild(UI.HUD.healthBar);
+    Game.PIXIApp.stage.removeChild(UI.HUD.cannonCooldown);
+    Game.PIXIApp.stage.removeChild(UI.HUD.textArea);
+}
+
+function InitResultsScreen() {
+    UI.HUD.textArea = new PIXI.Container();
+    let textScore =  new PIXI.Text("Score: " + Game.score, {
+        fontFamily: "Arial",
+        fontSize: 60,
+        fill: "#88ee00",
+        stroke: "black",
+        strokeThickness: 10,
+    });
+    textScore.position.set(50, 50);
+    UI.HUD.textArea.addChild(textScore);
+    UI.HUD.textArea.score = textScore;
+    let textPlunder = new PIXI.Text("Plunder: " + Game.plunder, {
+        fontFamily: "Arial",
+        fontSize: 60,
+        fill: "yellow",
+        stroke: "black",
+        strokeThickness: 10,
+    });
+    textPlunder.position.set(50, 120);
+    UI.HUD.textArea.addChild(textPlunder);
+    UI.HUD.textArea.plunder = textPlunder;
+    UI.HUD.textArea.zIndex = 9999;
+    let textFinalScore =  new PIXI.Text("Final Score: " + Game.finalScore, {
+        fontFamily: "Arial",
+        fontSize: 60,
+        fill: "white",
+        stroke: "black",
+        strokeThickness: 10,
+    });
+    textFinalScore.position.set(50, 190);
+    UI.HUD.textArea.addChild(textFinalScore);
+    UI.HUD.textArea.finalScore = textFinalScore;
+    let textRank =  new PIXI.Text("Rank:\n" + Game.ranks.names[0], {
+        fontFamily: "Arial",
+        fontSize: 60,
+        fill: "red",
+        stroke: "black",
+        strokeThickness: 10,
+    });
+    textRank.position.set(550, 90);
+    UI.HUD.textArea.addChild(textRank);
+    UI.HUD.textArea.rank = textRank;
+    Game.PIXIApp.stage.addChild(UI.HUD.textArea);
+}
+
 function UpdateInterface(delta) {
-    UpdateHealthBar();
-    UpdateCannonCooldown();
-    UpdateTextArea();
-    UpdateUpgradeText("1", UI.HUD.textArea.health, Game.upgrades.health);
-    UpdateUpgradeText("2", UI.HUD.textArea.speed, Game.upgrades.speed);
-    UpdateUpgradeText("3", UI.HUD.textArea.cannon, Game.upgrades.cannonCooldown);
-    UpdateUpgradeText("4", UI.HUD.textArea.resist, Game.upgrades.explosionResist);
+    if(Game.context === 2) { // Game
+        UpdateHealthBar();
+        UpdateCannonCooldown();
+        UpdateTextArea();
+        UpdateUpgradeText("1", UI.HUD.textArea.health, Game.upgrades.health);
+        UpdateUpgradeText("2", UI.HUD.textArea.speed, Game.upgrades.speed);
+        UpdateUpgradeText("3", UI.HUD.textArea.cannon, Game.upgrades.cannonCooldown);
+        UpdateUpgradeText("4", UI.HUD.textArea.resist, Game.upgrades.explosionResist);
+    } else if (Game.context === 3) { // Results Screen
+        UpdateTextArea();
+        let shiftSpeed = 1000;
+        if(Game.score > 0) {
+            let amount = Math.min(delta * shiftSpeed, Game.score);
+            Game.score -= amount;
+            Game.finalScore += amount;
+            return;
+        }
+        if(Game.plunder > 0) {
+            let amount = Math.min(delta * shiftSpeed, Game.plunder);
+            Game.plunder -= amount;
+            Game.finalScore += amount * Game.config.plunderToScoreRatio;
+        }
+    }
 }
 
 function UpdateHealthBar() {
@@ -159,6 +229,16 @@ function UpdateCannonCooldown() {
 function UpdateTextArea() {
     UI.HUD.textArea.score.text = "Score: " + Math.round(Game.score);
     UI.HUD.textArea.plunder.text = "Plunder: " + Math.round(Game.plunder);
+    if(Game.context === 3) {
+        UI.HUD.textArea.finalScore.text = "Final Score: " + Math.round(Game.finalScore);
+        let rank = "";
+        for(let i = 0; i < Game.ranks.thresholds.length; i++) {
+            if(Game.finalScore > Game.ranks.thresholds[i]) {
+                rank = Game.ranks.names[i];
+            }
+        }
+        UI.HUD.textArea.rank.text = "Rank:\n" + rank;
+    }
 }
 
 function UpdateUpgradeText(key, text, upgrade) {

@@ -11,6 +11,7 @@ Game.simulationInterval = undefined;
 Game.lastTimestamp = -1;
 Game.useStableDeltas = true; // If false uses exact high-res clock to calculate deltas, if true uses 1/TPS. Eliminates debug line flickering if enabled.
 Game.paused = false;
+Game.context = 0;
 
 Game.config = {};
 Game.config.healingPerPlank = 20;
@@ -22,6 +23,7 @@ Game.config.vortexScaleMagnitudeRatio = 0.5;
 Game.config.vortexPowerMagnitudeRatio = 40;
 Game.config.vortexSizeMagnitudeRatio = 100;
 Game.config.plunderValues = [50, 100, 200];
+Game.config.plunderToScoreRatio = 0.5;
 Game.config.barrelPlanks = 3;
 Game.config.barrelExplosionPower = 5;
 Game.config.barrelExplosionPushback = 150;
@@ -64,20 +66,17 @@ Game.upgrades.explosionResist.costs = [50, 50, 50];
 Game.upgrades.explosionResist.display = ["0%", "50%", "100%"];
 Game.upgrades.explosionResist.level = -1;
 
+Game.ranks = {};
+Game.ranks.thresholds = [0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000];
+Game.ranks.names = ["Landlubber", "Barnacle", "Ship Rat", "Swabber", "Lookout", "Cannoneer", "First Mate", "Captain", "Pirate King"];
+
 Game.score = 0;
 Game.plunder = 0;
+Game.finalScore = 0;
 
 Game.Inputs = {}
-Game.Inputs.Left = undefined;
-Game.Inputs.Right = undefined;
-Game.Inputs.Up = undefined;
-Game.Inputs.Down = undefined;
-
 Game.Objects = [];
-
-// Temporary for Particle Dynamics testing
-Game.Forces = [];
-Game.Motion = [];
+Game.VFX = [];
 
 // Temporary for PathInterpolation testing
 Game.CatmullRomDebug = undefined;
@@ -118,7 +117,7 @@ function Init() {
 function LoadAssets() {
     const loader = PIXI.Loader.shared;
     Game.PIXIApp = new PIXI.Application({width: Game.width, height: Game.height, backgroundColor: 0x1099bb});
-    UI.Elements.game.appendChild(Game.PIXIApp.view); // TODO: Once window decoration is here, attach in a way that fits
+    UI.Elements.game.appendChild(Game.PIXIApp.view);
 
     Game.PIXIApp.stage.interactive = true;
     Game.PIXIApp.stage.on("mousemove", (event) => {
@@ -129,12 +128,10 @@ function LoadAssets() {
     Game.graphics = new PIXI.Graphics();
     Game.PIXIApp.stage.addChild(Game.graphics);
 
-    VoronoiFracture.RegisterTexture("plank", "assets/plank.png");
     VoronoiFracture.RegisterTexture("ship1", "assets/ship1.png");
     VoronoiFracture.RegisterTexture("ship2", "assets/ship2.png");
     VoronoiFracture.RegisterTexture("ship3", "assets/ship3.png");
     VoronoiFracture.RegisterTexture("barrel", "assets/barrel.png");
-    VoronoiFracture.RegisterTexture("barrel_gunpowder", "assets/barrel_gunpowder.png");
 
     loader.add("player", "assets/pirate.png");
     loader.add("cannonball", "assets/cannonball.png");
@@ -146,7 +143,6 @@ function LoadAssets() {
     loader.add("barrel", "assets/barrel.png");
     loader.add("barrel_gunpowder", "assets/barrel_gunpowder.png");
     loader.add("vortex", "assets/vortex.png");
-
     loader.add("treasure_low", "assets/treasure_low.png");
     loader.add("treasure_mid", "assets/treasure_mid.png");
     loader.add("treasure_high", "assets/treasure_high.png");
@@ -159,23 +155,76 @@ function LoadAssets() {
     loader.add("birdBlue1", "assets/birdBlue1.png");
     loader.add("birdBlue2", "assets/birdBlue2.png");
     loader.add("birdBlue3", "assets/birdBlue3.png");
+    loader.add("background", "assets/background.png");
+    loader.add("explosion", "assets/explosion.png");
+    loader.add("rim", "assets/rim.png");
+    loader.add("side", "assets/side.png");
+    loader.add("smoke1", "assets/smoke1.png");
+    loader.add("smoke2", "assets/smoke2.png");
+    loader.add("title", "assets/title.png");
 
-    loader.load(Setup);
+    loader.load(OnLoad);
 }
 
-function Setup() {
-    ParticleDynamics.Forces.push(new DragForce(0.5));
-
-    ParticleDynamics.Forces.push(new OutOfBoundsForce(150));
-
-    CreatePlayer();
-    UI.InitHUD();
-
+function OnLoad() {
     Game.PIXIApp.ticker.minFPS = 0;
     Game.PIXIApp.ticker.maxFPS = Game.renderFPS;
     if (!Game.paused) {
         Game.SetSimulationTPS(Game.simulationTPS);
     }
+
+    GameScene();
+}
+
+function TitleScreen() {
+    Game.context = 1;
+    let background = new VFX(0, 0, new PIXI.Sprite(Game.Resources.background.texture));
+    background.sprite.width = Game.width;
+    background.sprite.height = Game.height;
+    let rim = new VFX(0, 0, new PIXI.Sprite(Game.Resources.rim.texture));
+    rim.sprite.width = Game.width;
+    rim.sprite.height = Game.height;
+    let side = new VFX(0, 0, new PIXI.Sprite(Game.Resources.side.texture));
+    side.sprite.width = Game.width;
+    side.sprite.height = Game.height;
+    new Title(Game.width/2, 280);
+    let textPlay =  new PIXI.Text("Play!", {
+        fontFamily: "Arial",
+        fontSize: 100,
+        fill: "red",
+        stroke: "black",
+        strokeThickness: 10,
+    });
+    textPlay.position.set(Game.width/2, 800);
+    textPlay.anchor.set(0.5);
+    textPlay.interactive = true;
+    textPlay.buttonMode = true;
+    textPlay.on('pointerdown', () => {
+        Game.VFX.forEach((obj) => {
+            obj.destroy();
+        })
+        Game.PIXIApp.stage.removeChild(textPlay);
+        GameScene();
+    });
+
+    Game.PIXIApp.stage.addChild(textPlay);
+}
+
+function ResultScreen() {
+    Game.context = 3;
+    UI.InitResults();
+    let background = new VFX(0, 0, new PIXI.Sprite(Game.Resources.background.texture));
+    background.sprite.width = Game.width;
+    background.sprite.height = Game.height;
+}
+
+function GameScene() {
+    Game.context = 2;
+    ParticleDynamics.Forces.push(new DragForce(0.5));
+    ParticleDynamics.Forces.push(new OutOfBoundsForce(150));
+
+    CreatePlayer();
+    UI.InitHUD();
 }
 
 function CreatePlayer() {
@@ -266,6 +315,9 @@ function DrawSpline() {
 }
 
 function Tick() {
+    if(Game.context === 0) {
+        return;
+    }
     let delta;
     if (Game.useStableDeltas || Game.lastTimestamp < 0) {
         delta = 1 / Game.simulationTPS;
@@ -278,24 +330,10 @@ function Tick() {
 }
 
 function SimulationUpdate(delta) {
-    Game.Forces.forEach((force, i) => {
-        force.center.x += Game.Motion[i].x * delta;
-        force.center.y += Game.Motion[i].y * delta;
-
-        if (force.center.x < 0) {
-            force.center.x += Game.width;
-        } else if (force.center.x > Game.width) {
-            force.center.x -= Game.width;
-        }
-
-        if (force.center.y < 0) {
-            force.center.y += Game.height;
-        } else if (force.center.y > Game.height) {
-            force.center.y -= Game.height;
-        }
-    })//*/
-
     Game.Objects.forEach((obj) => {
+        obj.update(delta);
+    })
+    Game.VFX.forEach((obj) => {
         obj.update(delta);
     })
 
@@ -303,7 +341,14 @@ function SimulationUpdate(delta) {
 }
 
 function GameOver() {
-    console.log("You are dead! Not big surprise.")
+    Game.Objects.forEach((obj) => {
+        obj.destroy();
+    })
+    Game.VFX.forEach((obj) => {
+        obj.destroy();
+    });
+    UI.RemoveHUD();
+    ResultScreen();
 }
 
 function SetSimulationTPS(tps) {

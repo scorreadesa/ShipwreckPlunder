@@ -98,6 +98,11 @@ class Player extends GameObject {
         direction.rotate(this.sprite.angle);
         let scaling = 100 * this.sprite.scale.x;
         new Cannonball(this.sprite.x + direction.x * scaling, this.sprite.y + direction.y * scaling, direction, 25);
+        for(let i = 0; i < 20; i++) {
+            let smokeDir = direction.clone();
+            smokeDir.rotate((Math.random() - 0.5) * 60)
+            new Smoke(this.sprite.x + direction.x * scaling * 1.6, this.sprite.y + direction.y * scaling * 1.6, smokeDir, Math.random() * 2, 0.4, 0.3 + Math.random() * 0.5);
+        }
     }
 
     damage(amount, explosive = false) {
@@ -316,7 +321,13 @@ class Barrel extends GameObject {
     cannonHit(point) {
         this.#destroyActual();
         if(this.explosive) {
-            // TODO: Explosion VFX
+            console.log("Boom")
+            new Explosion(this.sprite.x, this.sprite.y);
+            for(let i = 0; i < 30; i++) {
+                let dir = new Vector2(0, 1);
+                dir.rotate(Math.random() * 360);
+                new Smoke(this.sprite.x, this.sprite.y, dir, (0.5 + Math.random() * 0.5) * 5, 1, 0.3 + Math.random());
+            }
             this.collisionRadius *= 3;
             let objects = Game.GetCollidingObjects(this);
             objects.forEach((object) => {
@@ -428,6 +439,13 @@ class Vortex extends GameObject {
         this.sprite.zIndex = -1;
         this.force = new VortexForce(x, y, Game.config.vortexPowerMagnitudeRatio * magnitude, Game.config.vortexSizeMagnitudeRatio * magnitude);
         ParticleDynamics.Forces.push(this.force);
+        this.path = new CatmullRom(0.1);
+        let points = [];
+        for(let i = 0; i < 10; i++) {
+            points.push(new Vector2(Math.random() * Game.width, Math.random() * Game.height));
+        }
+        this.path.addPoints(points);
+        this.path.draw();
 
         // TODO: Replace with path interpolation
         let vel = 25;
