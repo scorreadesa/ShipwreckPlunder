@@ -452,7 +452,7 @@ class Vortex extends GameObject {
         points.push(end);
         points.push(end);
         this.path.addPoints(points);
-        this.path.draw();
+        this.path.createLineSigments();
         this.sample = 0;
     }
 
@@ -493,6 +493,7 @@ class Vortex extends GameObject {
 
     destroy() {
         super.destroy();
+        this.path.destroy();
         ParticleDynamics.Forces = ParticleDynamics.Forces.filter((obj) => {
             return obj !== this.force
         });
@@ -537,7 +538,7 @@ class Bird extends GameObject {
         points.push(end);
         points.push(end);
         this.path.addPoints(points);
-        //this.path.draw();
+        this.path.createLineSigments();
         this.lookahead = 50;
         this.moveSpeed = 50;
         this.sample = 0;
@@ -582,6 +583,11 @@ class Bird extends GameObject {
         this.sprite.y = pos.y;
         lookahead.subtract(pos);
         this.sprite.angle = lookahead.getRotationAngle();
+    }
+
+    destroy() {
+        super.destroy();
+        this.path.destroy();
     }
 }
 

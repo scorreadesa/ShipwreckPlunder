@@ -78,15 +78,6 @@ Game.Inputs = {}
 Game.Objects = [];
 Game.VFX = [];
 
-// Temporary for PathInterpolation testing
-Game.CatmullRomDebug = undefined;
-Game.graphics = undefined;
-
-Game.AddPoint = AddPoint;
-Game.DrawControlPoints = DrawControlPoints;
-Game.DrawSplineCurve = DrawSplineCurve;
-Game.ShowArcLengthTable = ShowArcLengthTable;
-
 Game.Init = Init;
 Game.GameOver = GameOver;
 Game.SetSimulationTPS = SetSimulationTPS;
@@ -311,7 +302,7 @@ function DrawSpline() {
     ];
     let cmr = new CatmullRom(0.001);
     cmr.addPoints(control_points);
-    cmr.draw();
+    cmr.createLineSigments();
 }
 
 function Tick() {
@@ -472,41 +463,4 @@ function SetupKey(value) {
     };
 
     return key;
-}
-
-function AddPoint()
-{
-    let x = parseFloat(document.getElementById("xcoordinate").value);
-    let y = parseFloat(document.getElementById("ycoordinate").value);
-    if(!Game.CatmullRomDebug) {
-        Game.CatmullRomDebug = new CatmullRom();
-    }
-
-    let new_pt = new Vector2(x, y);
-    console.log("Adding pt ", JSON.stringify(new_pt), " to spline curve.");
-    Game.CatmullRomDebug.addPoint(new_pt);
-}
-
-function DrawControlPoints()
-{
-    if(Game.CatmullRomDebug) {
-        const points = Game.CatmullRomDebug.getPoints();
-        console.log(points);
-        drawPoints(points);
-    }
-}
-
-function DrawSplineCurve()
-{
-    if(Game.CatmullRomDebug) {
-        Game.CatmullRomDebug.draw();
-    }
-}
-
-function ShowArcLengthTable()
-{
-    if(Game.CatmullRomDebug) {
-        let nsamples = parseFloat(document.getElementById("nsamples").value);
-        Game.CatmullRomDebug.showArcLengthSamples(nsamples);
-    }
 }

@@ -1,3 +1,17 @@
+PathInterpolation = {};
+PathInterpolation.debugShowLine = false;
+PathInterpolation.debugShowPoints = false;
+PathInterpolation.debugShowTable = false;
+PathInterpolation.ApplyDebug = ApplyDebug;
+
+PathInterpolation.Splines = [];
+
+function ApplyDebug() {
+    PathInterpolation.Splines.forEach((spline) => {
+        spline.applyDrawing();
+    })
+}
+
 class CatmullRomError extends Error {
     constructor(message) {
         super(message);
@@ -8,15 +22,6 @@ class CatmullRomError extends Error {
 class ArcLengthTable {
     constructor() {
         this.parametric_arclength_map = [];
-    }
-
-    getNSamplesFromTable(n) {
-        let samples = [];
-        let end = n >= this.parametric_arclength_map.length ? this.parametric_arclength_map.length - 1 : n;
-        for (let start = 0; start < end; start++) {
-            samples.push(this.parametric_arclength_map[start]);
-        }
-        return samples;
     }
 
     show() {
@@ -91,19 +96,65 @@ class ArcLengthTable {
 }
 
 class CatmullRom {
-    constructor(draw_step = 0.001, tau = 0.5) {
+    constructor(draw_step = 0.1, tau = 0.5) {
         this.points = [];
-        this.current_drawn_point_idx = 1;
         this.draw_step = draw_step;
         this.tau = tau;
         this.arcLengthTable = new ArcLengthTable();
+        this.lineSegments = [];
+        this.controlPoints = [];
+        this.tablePoints = [];
+        PathInterpolation.Splines.push(this);
     }
 
-    showArcLengthSamples(n) {
-        let samples = this.arcLengthTable.getNSamplesFromTable(n);
-        for (let start = 0; start < samples.length; start++) {
-            let pt = this.lookUp(samples[start].arc_length_value);
-            console.log(JSON.stringify(samples[start]), JSON.stringify(pt));
+    destroy() {
+        if(PathInterpolation.debugShowLine) {
+            this.lineSegments.forEach((obj) => {
+                Game.PIXIApp.stage.removeChild(obj);
+            })
+        }
+        if(PathInterpolation.debugShowPoints) {
+            this.controlPoints.forEach((obj) => {
+                Game.PIXIApp.stage.removeChild(obj);
+            })
+        }
+        if(PathInterpolation.debugShowTable) {
+            this.tablePoints.forEach((obj) => {
+                Game.PIXIApp.stage.removeChild(obj);
+            })
+        }
+        PathInterpolation.Splines = PathInterpolation.Splines.filter((v) => {
+            return v !== this
+        });
+    }
+
+    applyDrawing() {
+        if(PathInterpolation.debugShowLine) {
+            this.lineSegments.forEach((obj) => {
+                Game.PIXIApp.stage.addChild(obj);
+            })
+        } else {
+            this.lineSegments.forEach((obj) => {
+                Game.PIXIApp.stage.removeChild(obj);
+            })
+        }
+        if(PathInterpolation.debugShowPoints) {
+            this.controlPoints.forEach((obj) => {
+                Game.PIXIApp.stage.addChild(obj);
+            })
+        } else {
+            this.controlPoints.forEach((obj) => {
+                Game.PIXIApp.stage.removeChild(obj);
+            })
+        }
+        if(PathInterpolation.debugShowTable) {
+            this.tablePoints.forEach((obj) => {
+                Game.PIXIApp.stage.addChild(obj);
+            })
+        } else {
+            this.tablePoints.forEach((obj) => {
+                Game.PIXIApp.stage.removeChild(obj);
+            })
         }
     }
 
@@ -137,6 +188,13 @@ class CatmullRom {
                     let param_value = i + start;
                     this.arcLengthTable.add(param_value, accumulated_chord_length);
                     old_point = new_point;
+
+                    let arcGraph = new PIXI.Graphics();
+                    arcGraph.zIndex = 100001;
+                    arcGraph.beginFill(0xFFFF00);
+                    arcGraph.drawCircle(new_point.x, new_point.y, 2);
+                    arcGraph.endFill();
+                    this.tablePoints.push(arcGraph);
                 }
             }
         }
@@ -160,8 +218,7 @@ class CatmullRom {
         return pt;
     }
 
-    draw() {
-        // draw the points
+    createLineSigments() {
         if (this.points.length >= 4) {
             let lastPoint = undefined;
             let where = 0;
@@ -174,84 +231,43 @@ class CatmullRom {
                 if (lastPoint !== undefined) {
                     let l = new PIXI.Graphics();
                     l.zIndex = 99999;
-                    l.lineStyle({width: 1, color: 0xFF0000})
+                    l.lineStyle({width: 1, color: 0x00FF00})
                     l.moveTo(lastPoint.x, lastPoint.y);
                     l.lineTo(point.x, point.y);
-                    Game.PIXIApp.stage.addChild(l);
+                    this.lineSegments.push(l);
                 }
                 lastPoint = point;
             }
         }
+
+        this.applyDrawing(); // Method is called once path is finalized
     }
 
-    addPoint(point, debug = false) {
+    addPoint(point) {
         if (!(point instanceof Vector2)) {
             throw new CatmullRomError("expected type Vector2, got: " + typeof (point));
         }
 
         this.points.push(point);
+        let pointGraph = new PIXI.Graphics();
+        pointGraph.zIndex = 100000;
+        pointGraph.beginFill(0xFF00FF);
+        pointGraph.drawCircle(point.x, point.y, 5);
+        pointGraph.endFill();
+        this.controlPoints.push(pointGraph);
 
-        if (this.points.length >= 4) {
+        if(this.points.length >= 4) {
             this.computeArcLengthTable();
-            if (debug) {
-                this.arcLengthTable.show();
-                let test = this.lookUp(0.0)
-                console.log(JSON.stringify(test));
-                test = this.lookUp(321.0);
-                console.log(JSON.stringify(test));
-                test = this.lookUp(237.61);
-                console.log(JSON.stringify(test));
-                test = this.lookUp(321.024);
-                console.log(JSON.stringify(test));
-            }
         }
     }
 
-    addPoints(points, debug = false) {
+    addPoints(points) {
         for (const point of points) {
             if (!(point instanceof Vector2)) {
                 throw new CatmullRomError("expected type Vector2, got: " + typeof (point));
             }
 
-            this.points.push(point);
+            this.addPoint(point);
         }
-
-        if (this.points.length >= 4) {
-            this.computeArcLengthTable();
-            if (debug) {
-                this.arcLengthTable.show();
-                let test = this.lookUp(0.0)
-                console.log(JSON.stringify(test));
-                test = this.lookUp(321.0);
-                console.log(JSON.stringify(test));
-                test = this.lookUp(237.61);
-                console.log(JSON.stringify(test));
-                test = this.lookUp(321.024);
-                console.log(JSON.stringify(test));
-            }
-        }
-    }
-
-    getPoints() {
-        return this.points;
-    }
-}
-
-function drawPoints(points) {
-    for (let idx = 0; idx < points.length; idx++) {
-        Game.graphics.beginFill(0xff00ee);
-        Game.graphics.drawCircle(points[idx].x, points[idx].y, 5.0);
-        Game.graphics.endFill();
-    }
-}
-
-function drawSpline(points) {
-    let first_point = points[0];
-    for (let idx = 1; idx < points.length; idx++) {
-        let next_point = points[idx];
-        Game.graphics.beginFill(0xff0000);
-        Game.graphics.lineStyle(1, 0xff0000).moveTo(first_point.x, first_point.y).lineTo(next_point.x, next_point.y);
-        Game.graphics.endFill();
-        first_point = next_point;
     }
 }

@@ -16,6 +16,9 @@ UI.ApplyFractureDebugField = ApplyFractureDebugField;
 UI.ApplyNoised = ApplyNoised;
 UI.ApplyFractureType = ApplyFractureType;
 UI.ApplyNoiseType = ApplyNoiseType;
+UI.ApplyShowSplines = ApplyShowSplines;
+UI.ApplyShowSplinePoints = ApplyShowSplinePoints;
+UI.ApplyShowSplineTable = ApplyShowSplineTable;
 UI.TogglePause = TogglePause;
 UI.Step = Step;
 
@@ -36,6 +39,9 @@ function Init() {
     UI.Elements.cells = document.getElementById("cells");
     UI.Elements.type = document.getElementById("type");
     UI.Elements.noiseType = document.getElementById("noiseType");
+    UI.Elements.splines = document.getElementById("splines");
+    UI.Elements.points = document.getElementById("points");
+    UI.Elements.table = document.getElementById("table");
     UI.Elements.pause = document.getElementById("pause");
     UI.Elements.step = document.getElementById("step");
 
@@ -51,6 +57,9 @@ function Init() {
     UI.Elements.cells.checked = VoronoiFracture.debugShowField;
     UI.Elements.type.value = VoronoiFracture.type;
     UI.Elements.noiseType.value = VoronoiFracture.noiseType;
+    UI.Elements.splines.checked = PathInterpolation.debugShowLine;
+    UI.Elements.points.checked = PathInterpolation.debugShowPoints;
+    UI.Elements.table.checked = PathInterpolation.debugShowTable;
     UI.Elements.pause.innerText = Game.paused ? "Unpause" : "Pause";
     UI.Elements.step.disabled = !Game.paused;
 }
@@ -301,6 +310,21 @@ function ApplyFractureType() {
 
 function ApplyNoiseType() {
     VoronoiFracture.noiseType = parseInt(UI.Elements.noiseType.value);
+}
+
+function ApplyShowSplines() {
+    PathInterpolation.debugShowLine = UI.Elements.splines.checked;
+    PathInterpolation.ApplyDebug();
+}
+
+function ApplyShowSplinePoints() {
+    PathInterpolation.debugShowPoints = UI.Elements.points.checked;
+    PathInterpolation.ApplyDebug();
+}
+
+function ApplyShowSplineTable() {
+    PathInterpolation.debugShowTable = UI.Elements.table.checked;
+    PathInterpolation.ApplyDebug();
 }
 
 function TogglePause() {
