@@ -220,8 +220,8 @@ class Particle {
         if (this.lastPositions.length > 1) {
             let last = this.lastPositions[this.lastPositions.length - 2];
             let l = new PIXI.Graphics();
-            l.zIndex = 999;
-            l.lineStyle({width: 1, color: 0xFFFFFF})
+            l.zIndex = 99999;
+            l.lineStyle({width: 1, color: 0xFFFFFF});
             l.moveTo(last.x, last.y);
             l.lineTo(current.x, current.y);
             this.lines.push(l);

@@ -279,7 +279,7 @@ function CreatePlayer() {
     }
 
     Game.Inputs.SpawnBird.press = function () {
-        new BarrelBird(Math.random() * Game.width, Math.random() * Game.height);
+        new Bird(0);
     }
 }
 
@@ -293,7 +293,7 @@ function GetUpgradeValue(upgrade) {
 }
 
 function CreateVortex() {
-    new Vortex(Math.random() * Game.width, Math.random() * Game.height, 3);
+    new Vortex(3);
 }
 
 function CreateShipPart() {
