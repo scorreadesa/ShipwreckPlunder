@@ -8,45 +8,53 @@
 
 class SceneNode
 {
-    constructor(game_object)
+    constructor(sprite)
     {
-        this.game_object_ = game_object;
-        this.parent_ = null;
-        this.children_ = [];
-        this.transform = identity2x2();
+        this.sprite = sprite;
+        this.parent = null;
+        this.children = [];
+        this.x = sprite.x;
+        this.y = sprite.y;
+        this.angle = sprite.angle;
     }
 
-    addChild(game_object)
+    addChild(sprite)
     {
-        this.parent_ = this;
-        this.children_.push(game_object);
+        this.parent = this;
+        this.children.push(sprite);
     }
 
-    removeChild(game_object)
+    removeChild(sprite)
     {
+        for(let i = 0; i < this.children.length; i++)
+        {
+            if(this.children[i] === sprite)
+            {
+                this.children.splice(i, 1);
+            }
+        }
+        Game.Objects.removeChild(sprite);
+        Game.Objects = Game.Objects.filter((v) => {
+            return v !== this
+        });
+    }
 
+
+    update(delta)
+    {
+        this.updateSelf(delta);
+        this.updateChildren(delta);
+    }
+
+    updateSelf(delta)
+    {
     }
 
     updateChildren(delta)
     {
-        //TODO: issue every object is automatically added to the game object array and is automatically updated
-        //TODO: maybe dont use game object, use sprite instead?
-        for(let i = 0; i < this.children_.length; i++)
+        for(let i = 0; i < this.children.length; i++)
         {
-            this.children_[i].update(delta);
+            this.children[i].update(delta);
         }
     }
-
-    getModelMatrix()
-    {
-
-    }
-}
-
-function identity2x2()
-{
-    return [
-        new Vector2(1.0, 0.0),
-        new Vector2(0.0, 1.0)
-    ]
 }
