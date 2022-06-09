@@ -7,6 +7,10 @@ class GameObject {
         //Debug.DrawDot(x, y, collisionRadius, 1000);
         Game.PIXIApp.stage.addChild(this.sprite);
         Game.Objects.push(this);
+
+        this.onDestroy = function () {
+
+        };
     }
 
     fadeIn(duration, startScale, endScale) {
@@ -49,6 +53,7 @@ class GameObject {
     }
 
     destroy() {
+        this.onDestroy();
         Game.PIXIApp.stage.removeChild(this.sprite);
         Game.Objects = Game.Objects.filter((v) => {
             return v !== this
@@ -73,7 +78,6 @@ class Player extends GameObject {
         this.currentHP = this.maxHP;
         this.pickupRange = 50;
         this.movementSpeed = Game.upgrades.speed.default;
-        this.explosionDamageTaken = Game.upgrades.explosionResist.default;
     }
 
     update(delta) {
@@ -105,10 +109,7 @@ class Player extends GameObject {
         }
     }
 
-    damage(amount, explosive = false) {
-        if (explosive) {
-            amount *= this.explosionDamageTaken;
-        }
+    damage(amount) {
         this.currentHP -= amount;
         if (this.currentHP <= 0) {
             Game.GameOver();
@@ -233,6 +234,7 @@ class Treasure extends GameObject {
         this.sprite.scale.set(scale);
         this.sprite.angle = Math.random() * 360;
         this.sprite.interactive = true;
+        this.sprite.zIndex = 1;
         this.health = 20 * tier;
         this.sprite.on('pointerdown', () => { // Pickup Handler
             if (this.dead) {
@@ -285,6 +287,7 @@ class Barrel extends GameObject {
         this.sprite.scale.set(scale);
         this.sprite.angle = Math.random() * 360;
         this.sprite.interactive = true;
+        this.sprite.zIndex = 1;
         this.health = 50;
         if (fade) {
             this.fadeIn(1, scale * 0.8, scale);
@@ -321,7 +324,6 @@ class Barrel extends GameObject {
     cannonHit(point) {
         this.#destroyActual();
         if (this.explosive) {
-            console.log("Boom")
             new Explosion(this.sprite.x, this.sprite.y);
             for (let i = 0; i < 30; i++) {
                 let dir = new Vector2(0, 1);
@@ -339,7 +341,7 @@ class Barrel extends GameObject {
                         object.particle.addImpulse(dir);
                     }
                     if ("damage" in object) {
-                        object.damage(Game.config.barrelExplosionDamage, true);
+                        object.damage(Game.config.barrelExplosionDamage);
                     }
                     return;
                 }
@@ -347,7 +349,7 @@ class Barrel extends GameObject {
             })
         } else {
             // Only fracture regular barrel, explosion VFX hides fracture.
-            VoronoiFracture.FractureSprite(this.sprite, this.explosive ? "barrel_gunpowder" : "barrel", point, 10, 1.5);
+            VoronoiFracture.FractureSprite(this.sprite, "barrel", point, 0.5, 1.5);
             for (let i = 0; i < Game.config.barrelPlanks; i++) {
                 let plank = new Plank(this.sprite.x + this.collisionRadius * Math.random() - this.collisionRadius / 2,
                     this.sprite.y + this.collisionRadius * Math.random() - this.collisionRadius / 2);
@@ -383,6 +385,7 @@ class ShipPart extends GameObject {
         this.sprite.scale.set(scale);
         this.sprite.angle = Math.random() * 360;
         this.sprite.anchor.set(0.5);
+        this.sprite.zIndex = 99;
         this.durability = Game.config.shipPartDurability;
         this.fadeIn(1, scale * 0.8, scale);
     }
@@ -406,7 +409,7 @@ class ShipPart extends GameObject {
     cannonHit(point) {
         this.durability--;
         if (this.durability <= 0) {
-            VoronoiFracture.FractureSprite(this.sprite, this.partType, point, 25, 3);
+            VoronoiFracture.FractureSprite(this.sprite, this.partType, point, 0.5, 3);
             for (let i = 0; i < Game.config.shipPartPlanks; i++) {
                 let plank = new Plank(this.sprite.x + this.collisionRadius * Math.random() - this.collisionRadius / 2,
                     this.sprite.y + this.collisionRadius * Math.random() - this.collisionRadius / 2);
@@ -625,6 +628,7 @@ class BarrelBird extends Bird {
         this.barrelSprite.zIndex = 999;
         this.barrelSprite.angle = this.sprite.angle;
         Game.PIXIApp.stage.addChild(this.barrelSprite);
+        this.dropPoint = this.path.arcLengthTable.parametric_arclength_map[this.path.arcLengthTable.parametric_arclength_map.length - 1].arc_length_value * Math.random();
     }
 
     update(delta) {
@@ -633,7 +637,7 @@ class BarrelBird extends Bird {
             this.barrelSprite.x = this.sprite.x;
             this.barrelSprite.y = this.sprite.y;
             this.barrelSprite.angle = this.sprite.angle;
-            if (Math.random() > 0.99) { // TODO: Replace with point on curve
+            if (this.hasBarrel && this.sample > this.dropPoint) {
                 this.hasBarrel = false;
                 this.moveSpeed = 75;
                 let barrel = new Barrel(this.sprite.x, this.sprite.y, true, false);
@@ -667,6 +671,13 @@ class Coconut extends GameObject {
         this.speed = 5;
         this.particle = undefined;
         this.direction = direction;
+    }
+
+    damage(amount) {
+        this.health -= amount;
+        if (this.health <= 0) {
+            this.destroy();
+        }
     }
 
     update(delta) {

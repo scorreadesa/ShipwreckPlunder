@@ -110,7 +110,6 @@ function InitGameHUD() {
     AddUpgradeText(120, "health");
     AddUpgradeText(140, "speed");
     AddUpgradeText(160, "cannon");
-    AddUpgradeText(180, "resist");
 
     UI.HUD.healthBar.zIndex = 9999;
     UI.HUD.cannonCooldown.zIndex = 9999;
@@ -191,7 +190,6 @@ function UpdateInterface(delta) {
         UpdateUpgradeText("1", UI.HUD.textArea.health, Game.upgrades.health);
         UpdateUpgradeText("2", UI.HUD.textArea.speed, Game.upgrades.speed);
         UpdateUpgradeText("3", UI.HUD.textArea.cannon, Game.upgrades.cannonCooldown);
-        UpdateUpgradeText("4", UI.HUD.textArea.resist, Game.upgrades.explosionResist);
     } else if (Game.context === 3) { // Results Screen
         UpdateTextArea();
         let shiftSpeed = 1000;

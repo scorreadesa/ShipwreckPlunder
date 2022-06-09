@@ -175,7 +175,7 @@ function FractureSprite(sprite, textureName, point, force, fade) {
         let forceVector = new Vector2(x - center.x, y - center.y);
         forceVector.normalize();
         forceVector.scalarMultiply(force);
-        frag.particle.vel = forceVector;
+        frag.velocity = forceVector;
     })
 }
 
@@ -275,13 +275,14 @@ class Fragment extends GameObject {
         super(x, y, sprite, 0);
         this.fade = fade;
         this.currentFade = fade;
-        this.particle = new Particle(x, y, 1, false); // TODO: Calculate mass based on pixels if needed
+        //this.particle = new Particle(x, y, 1, false); // TODO: Calculate mass based on pixels if needed
+        this.velocity = undefined;
     }
 
     update(delta) {
-        ParticleDynamics.UpdateParticle(this.particle, delta);
-        this.sprite.x = this.particle.pos.x;
-        this.sprite.y = this.particle.pos.y;
+        //ParticleDynamics.UpdateParticle(this.particle, delta);
+        this.sprite.x += this.velocity.x;
+        this.sprite.y += this.velocity.y;
         this.currentFade -= delta;
         this.sprite.alpha = this.currentFade / this.fade;
         if (this.fade < 0) {

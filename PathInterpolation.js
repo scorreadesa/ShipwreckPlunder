@@ -220,24 +220,23 @@ class CatmullRom {
 
     createLineSigments() {
         if (this.points.length >= 4) {
+            this.computeArcLengthTable();
             let lastPoint = undefined;
             let where = 0;
+            let l = new PIXI.Graphics();
+            l.zIndex = 99999;
+            l.lineStyle({width: 1, color: 0x00FF00})
+            let point = this.lookUp(where);
+            l.moveTo(point.x, point.y);
             while (true) {
-                let point = this.lookUp(where);
-                where += 1;
+                where += 5;
+                point = this.lookUp(where);
                 if (point === undefined) {
                     break;
                 }
-                if (lastPoint !== undefined) {
-                    let l = new PIXI.Graphics();
-                    l.zIndex = 99999;
-                    l.lineStyle({width: 1, color: 0x00FF00})
-                    l.moveTo(lastPoint.x, lastPoint.y);
-                    l.lineTo(point.x, point.y);
-                    this.lineSegments.push(l);
-                }
-                lastPoint = point;
+                l.lineTo(point.x, point.y);
             }
+            this.lineSegments.push(l);
         }
 
         this.applyDrawing(); // Method is called once path is finalized
@@ -255,10 +254,6 @@ class CatmullRom {
         pointGraph.drawCircle(point.x, point.y, 5);
         pointGraph.endFill();
         this.controlPoints.push(pointGraph);
-
-        if(this.points.length >= 4) {
-            this.computeArcLengthTable();
-        }
     }
 
     addPoints(points) {

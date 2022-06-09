@@ -15,20 +15,20 @@ Game.context = 0;
 
 Game.config = {};
 Game.config.healingPerPlank = 20;
-Game.config.excessHealingScoreMultiplier = 1;
+Game.config.excessHealingScoreMultiplier = 2.5;
 Game.config.vortexDamagePerSecond = 10;
 Game.config.vortexSelfDamageMultiplier = 0.001;
 Game.config.vortexMagnitudeLossPerSecond = 0.01;
 Game.config.vortexScaleMagnitudeRatio = 0.5;
 Game.config.vortexPowerMagnitudeRatio = 40;
 Game.config.vortexSizeMagnitudeRatio = 100;
-Game.config.plunderValues = [50, 100, 200];
+Game.config.plunderValues = [100, 200, 400];
 Game.config.plunderToScoreRatio = 0.5;
 Game.config.barrelPlanks = 3;
 Game.config.barrelExplosionPower = 5;
 Game.config.barrelExplosionPushback = 150;
 Game.config.barrelExplosionDamage = 75;
-Game.config.shipPartDurability = 10;
+Game.config.shipPartDurability = 7;
 Game.config.shipPartPlanks = 10;
 Game.config.shipPartBarrels = 3;
 Game.config.birdCoconutRange = 300;
@@ -39,32 +39,25 @@ Game.config.birdCoconutCatchBonus = 125;
 Game.upgrades = {};
 Game.upgrades.cannonCooldown = {};
 Game.upgrades.cannonCooldown.label = "Cannon Cooldown";
-Game.upgrades.cannonCooldown.default = 7;
-Game.upgrades.cannonCooldown.values = [5, 3, 1];
-Game.upgrades.cannonCooldown.costs = [50, 50, 50];
+Game.upgrades.cannonCooldown.default = 4;
+Game.upgrades.cannonCooldown.values = [3, 2, 1];
+Game.upgrades.cannonCooldown.costs = [150, 450, 900];
 Game.upgrades.cannonCooldown.display = ["7s", "5s", "3s", "1s"];
 Game.upgrades.cannonCooldown.level = -1;
 Game.upgrades.health = {};
 Game.upgrades.health.label = "Health";
 Game.upgrades.health.default = 100;
 Game.upgrades.health.values = [150, 200, 250];
-Game.upgrades.health.costs = [50, 50, 50];
+Game.upgrades.health.costs = [100, 300, 500];
 Game.upgrades.health.display = ["100", "150", "200", "250"];
 Game.upgrades.health.level = -1;
 Game.upgrades.speed = {};
 Game.upgrades.speed.label = "Speed";
 Game.upgrades.speed.default = 50;
 Game.upgrades.speed.values = [75, 100, 125];
-Game.upgrades.speed.costs = [50, 50, 50];
+Game.upgrades.speed.costs = [150, 450, 900];
 Game.upgrades.speed.display = ["100%", "150%", "200%", "250%"];
 Game.upgrades.speed.level = -1;
-Game.upgrades.explosionResist = {};
-Game.upgrades.explosionResist.label = "Explosion Resist";
-Game.upgrades.explosionResist.default = 1;
-Game.upgrades.explosionResist.values = [0.5, 0];
-Game.upgrades.explosionResist.costs = [50, 50, 50];
-Game.upgrades.explosionResist.display = ["0%", "50%", "100%"];
-Game.upgrades.explosionResist.level = -1;
 
 Game.ranks = {};
 Game.ranks.thresholds = [0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000];
@@ -164,7 +157,7 @@ function OnLoad() {
         Game.SetSimulationTPS(Game.simulationTPS);
     }
 
-    GameScene();
+    TitleScreen();
 }
 
 function TitleScreen() {
@@ -221,7 +214,6 @@ function GameScene() {
 function CreatePlayer() {
     Game.player = new Player(Game.width / 2, Game.height / 2);
 
-    // https://github.com/kittykatattack/learningPixi
     Game.Inputs.Left = SetupKey("a");
     Game.Inputs.Up = SetupKey("w");
     Game.Inputs.Right = SetupKey("d");
@@ -317,7 +309,11 @@ function Tick() {
     }
     Game.lastTimestamp = window.performance.now();
     UI.UpdateInterface(delta);
+    if(Game.context === 2) {
+        GameLogic.Update(delta);
+    }
     SimulationUpdate(delta);
+
 }
 
 function SimulationUpdate(delta) {
@@ -421,7 +417,7 @@ function CheckCollision(obj1, obj2) {
     return false;
 }
 
-// https://github.com/kittykatattack/learningPixi#introduction
+// https://github.com/kittykatattack/learningPixi
 function SetupKey(value) {
     let key = {};
     key.value = value;
