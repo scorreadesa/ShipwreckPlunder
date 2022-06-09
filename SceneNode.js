@@ -26,16 +26,8 @@ class SceneNode
 
     removeChild(sprite)
     {
-        for(let i = 0; i < this.children.length; i++)
-        {
-            if(this.children[i] === sprite)
-            {
-                this.children.splice(i, 1);
-            }
-        }
-        Game.Objects.removeChild(sprite);
-        Game.Objects = Game.Objects.filter((v) => {
-            return v !== this
+        this.children = this.children.filter((v) => {
+            return v !== sprite;
         });
     }
 
