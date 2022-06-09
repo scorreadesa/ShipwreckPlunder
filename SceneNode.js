@@ -39,7 +39,6 @@ class SceneNode
         });
     }
 
-
     update(delta)
     {
         this.updateSelf(delta);
