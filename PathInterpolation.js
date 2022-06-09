@@ -218,10 +218,9 @@ class CatmullRom {
         return pt;
     }
 
-    createLineSigments() {
+    createLineSegments() {
         if (this.points.length >= 4) {
             this.computeArcLengthTable();
-            let lastPoint = undefined;
             let where = 0;
             let l = new PIXI.Graphics();
             l.zIndex = 99999;
