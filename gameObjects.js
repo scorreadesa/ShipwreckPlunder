@@ -455,7 +455,7 @@ class Vortex extends GameObject {
         points.push(end);
         points.push(end);
         this.path.addPoints(points);
-        this.path.createLineSigments();
+        this.path.createLineSegments();
         this.sample = 0;
     }
 
@@ -541,7 +541,7 @@ class Bird extends GameObject {
         points.push(end);
         points.push(end);
         this.path.addPoints(points);
-        this.path.createLineSigments();
+        this.path.createLineSegments();
         this.lookahead = 50;
         this.moveSpeed = 50;
         this.sample = 0;

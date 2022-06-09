@@ -60,8 +60,8 @@ Game.upgrades.speed.display = ["100%", "150%", "200%", "250%"];
 Game.upgrades.speed.level = -1;
 
 Game.ranks = {};
-Game.ranks.thresholds = [0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000];
-Game.ranks.names = ["Landlubber", "Barnacle", "Ship Rat", "Swabber", "Lookout", "Cannoneer", "First Mate", "Captain", "Pirate King"];
+Game.ranks.thresholds = [0, 1000, 2000, 3000, 4000, 5000, 6000, 7000];
+Game.ranks.names = ["Landlubber", "Barnacle", "Ship Rat", "Swabber", "Lookout", "First Mate", "Captain", "Pirate King"];
 
 Game.score = 0;
 Game.plunder = 0;
@@ -294,7 +294,7 @@ function DrawSpline() {
     ];
     let cmr = new CatmullRom(0.001);
     cmr.addPoints(control_points);
-    cmr.createLineSigments();
+    cmr.createLineSegments();
 }
 
 function Tick() {
