@@ -28,6 +28,8 @@ body {
 
 .sidebar-entry {
     padding-bottom: 2px;
+    text-align: start;
+    width: 400px;
 }
 
 h1 {

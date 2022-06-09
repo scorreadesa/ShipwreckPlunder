@@ -76,7 +76,7 @@ class Player extends GameObject {
         this.cannonCooldown = 0;
         this.maxHP = Game.upgrades.health.default;
         this.currentHP = this.maxHP;
-        this.pickupRange = 50;
+        this.pickupRange = 75;
         this.movementSpeed = Game.upgrades.speed.default;
     }
 
@@ -435,8 +435,8 @@ class ShipPart extends GameObject {
 class Vortex extends GameObject {
     constructor(magnitude) {
         let scale = magnitude * Game.config.vortexScaleMagnitudeRatio;
-        let start = OffscreenPoint(80 * scale);
-        let end = OffscreenPoint(80 * scale);
+        let start = OffscreenPoint(250 * scale);
+        let end = OffscreenPoint(250 * scale);
         super(start.x, start.y, new PIXI.Sprite(Game.Resources.vortex.texture), 75 * scale);
         this.magnitude = magnitude;
         this.sprite.scale.set(scale);

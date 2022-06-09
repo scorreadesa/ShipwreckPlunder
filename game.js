@@ -81,10 +81,17 @@ Game.CheckCollision = CheckCollision;
 Game.Pause = Pause;
 Game.Unpause = Unpause;
 Game.Step = Step;
-Game.CreateVortex = CreateVortex;
-Game.CreateShipPart = CreateShipPart;
-Game.CreatePlank = CreatePlank;
-Game.DrawSpline = DrawSpline;
+Game.SpawnVortex = SpawnVortex;
+Game.SpawnShipPart = SpawnShipPart;
+Game.SpawnPlank = SpawnPlank;
+Game.SpawnTreasureLow = SpawnTreasureLow;
+Game.SpawnTreasureMid = SpawnTreasureMid;
+Game.SpawnTreasureHigh = SpawnTreasureHigh;
+Game.SpawnBarrel = SpawnBarrel;
+Game.SpawnBarrelExplosive = SpawnBarrelExplosive;
+Game.SpawnBirdAmbient = SpawnBirdAmbient;
+Game.SpawnBirdBarrel = SpawnBirdBarrel;
+Game.SpawnBirdCoconut = SpawnBirdCoconut;
 
 function Init() {
     PIXI.settings.ANISOTROPIC_LEVEL = 16;
@@ -224,11 +231,6 @@ function CreatePlayer() {
     Game.Inputs.UpgradeCannon = SetupKey("3");
     Game.Inputs.UpgradeResist = SetupKey("4");
 
-    Game.Inputs.SpawnTreasure = SetupKey("t");
-    Game.Inputs.SpawnBarrel = SetupKey("b");
-    Game.Inputs.SpawnBarrelExplosive = SetupKey("e");
-    Game.Inputs.SpawnBird = SetupKey("f");
-
     Game.Inputs.Space.press = function () {
         Game.player.shoot();
     }
@@ -248,22 +250,6 @@ function CreatePlayer() {
     Game.Inputs.UpgradeResist.press = function () {
         Game.player.explosionDamageTaken = GetUpgradeValue(Game.upgrades.explosionResist);
     }
-
-    Game.Inputs.SpawnTreasure.press = function () {
-        new Treasure(Math.random() * Game.width, Math.random() * Game.height, 1 + Math.round(Math.random() * 2));
-    }
-
-    Game.Inputs.SpawnBarrel.press = function () {
-        new Barrel(Math.random() * Game.width, Math.random() * Game.height, false);
-    }
-
-    Game.Inputs.SpawnBarrelExplosive.press = function () {
-        new Barrel(Math.random() * Game.width, Math.random() * Game.height, true);
-    }
-
-    Game.Inputs.SpawnBird.press = function () {
-        new Bird(0);
-    }
 }
 
 function GetUpgradeValue(upgrade) {
@@ -275,26 +261,48 @@ function GetUpgradeValue(upgrade) {
     return upgrade.values[upgrade.level];
 }
 
-function CreateVortex() {
-    new Vortex(3);
+function SpawnVortex() {
+    new Vortex(1);
 }
 
-function CreateShipPart() {
+function SpawnShipPart() {
     new ShipPart(200, 500, 1 + Math.round(Math.random() * 2));
 }
 
-function CreatePlank() {
+function SpawnPlank() {
     new Plank(Math.random() * Game.width, Math.random() * Game.height);
 }
 
-function DrawSpline() {
-    let control_points = [
-        new Vector2(90, 480), new Vector2(90, 480), new Vector2(120, 550), new Vector2(200, 580),
-        new Vector2(250, 620), new Vector2(280, 650), new Vector2(290, 700), new Vector2(290, 700),
-    ];
-    let cmr = new CatmullRom(0.001);
-    cmr.addPoints(control_points);
-    cmr.createLineSegments();
+function SpawnTreasureLow() {
+    new Treasure(Math.random() * Game.width, Math.random() * Game.height, 0);
+}
+
+function SpawnTreasureMid() {
+    new Treasure(Math.random() * Game.width, Math.random() * Game.height, 1);
+}
+
+function SpawnTreasureHigh() {
+    new Treasure(Math.random() * Game.width, Math.random() * Game.height, 2);
+}
+
+function SpawnBarrel() {
+    new Barrel(Math.random() * Game.width, Math.random() * Game.height, false);
+}
+
+function SpawnBarrelExplosive() {
+    new Barrel(Math.random() * Game.width, Math.random() * Game.height, true);
+}
+
+function SpawnBirdAmbient() {
+    new Bird(0);
+}
+
+function SpawnBirdBarrel() {
+    new BarrelBird();
+}
+
+function SpawnBirdCoconut() {
+    new CoconutBird();
 }
 
 function Tick() {

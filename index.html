@@ -26,10 +26,18 @@
             <button id="step" type="button" onclick="UI.Step()">Step</button>
         </div>
         <div class="sidebar-entry">
-            <button id="vortex" type="button" onclick="Game.CreateVortex()">Spawn Vortex</button>
-            <button id="shipPart" type="button" onclick="Game.CreateShipPart()">Spawn Ship Part</button>
-            <button id="plank" type="button" onclick="Game.CreatePlank()">Spawn Plank</button>
-            <button id="spline" type="button" onclick="Game.DrawSpline()">Draw Spline</button>
+            <button id="vortex" type="button" onclick="Game.SpawnVortex()">Spawn Vortex</button>
+            <button id="plank" type="button" onclick="Game.SpawnPlank()">Spawn Plank</button>
+            <button id="barrel" type="button" onclick="Game.SpawnBarrel()">Spawn Barrel</button>
+            <button id="barrelExplosive" type="button" onclick="Game.SpawnBarrelExplosive()">Spawn Explosive Barrel</button>
+            <button id="shipPart" type="button" onclick="Game.SpawnShipPart()">Spawn Ship Part</button>
+            <button id="treasureLow" type="button" onclick="Game.SpawnTreasureLow()">Spawn Treasure (Low)</button>
+            <button id="treasureMid" type="button" onclick="Game.SpawnTreasureMid()">Spawn Treasure (Mid)</button>
+            <button id="treasureHigh" type="button" onclick="Game.SpawnTreasureHigh()">Spawn Treasure (High)</button>
+            <button id="bird" type="button" onclick="Game.SpawnBirdAmbient()">Spawn Bird (Ambient)</button>
+            <button id="birdBarrel" type="button" onclick="Game.SpawnBirdBarrel()">Spawn Bird (Barrel)</button>
+            <button id="birdCoconut" type="button" onclick="Game.SpawnBirdCoconut()">Spawn Bird (Coconut)</button>
+
         </div>
         <h1>Simulation Settings</h1>
         <div class="sidebar-entry">
