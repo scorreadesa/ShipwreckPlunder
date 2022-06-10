@@ -243,6 +243,13 @@ class Particle {
             Game.PIXIApp.stage.removeChild(line);
         })
     }
+
+    destroyTracking() {
+        this.clearTracking();
+        this.lines.forEach((line) => {
+            line.destroy();
+        })
+    }
 }
 
 class FieldLine extends PIXI.Graphics {

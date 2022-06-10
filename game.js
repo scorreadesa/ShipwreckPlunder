@@ -92,6 +92,7 @@ Game.SpawnBarrelExplosive = SpawnBarrelExplosive;
 Game.SpawnBirdAmbient = SpawnBirdAmbient;
 Game.SpawnBirdBarrel = SpawnBirdBarrel;
 Game.SpawnBirdCoconut = SpawnBirdCoconut;
+Game.EngagePlundertron = EngagePlundertron;
 
 function Init() {
     PIXI.settings.ANISOTROPIC_LEVEL = 16;
@@ -195,6 +196,7 @@ function TitleScreen() {
             obj.destroy();
         })
         Game.PIXIApp.stage.removeChild(textPlay);
+        textPlay.destroy();
         GameScene();
     });
 
@@ -274,15 +276,15 @@ function SpawnPlank() {
 }
 
 function SpawnTreasureLow() {
-    new Treasure(Math.random() * Game.width, Math.random() * Game.height, 0);
-}
-
-function SpawnTreasureMid() {
     new Treasure(Math.random() * Game.width, Math.random() * Game.height, 1);
 }
 
-function SpawnTreasureHigh() {
+function SpawnTreasureMid() {
     new Treasure(Math.random() * Game.width, Math.random() * Game.height, 2);
+}
+
+function SpawnTreasureHigh() {
+    new Treasure(Math.random() * Game.width, Math.random() * Game.height, 3);
 }
 
 function SpawnBarrel() {
@@ -303,6 +305,12 @@ function SpawnBirdBarrel() {
 
 function SpawnBirdCoconut() {
     new CoconutBird();
+}
+
+function EngagePlundertron() {
+    if(Game.player.plundertron === undefined) {
+        Game.player.plundertron = new Plundertron(Game.player.sprite.x, Game.player.sprite.y, Game.player.sprite.angle);
+    }
 }
 
 function Tick() {

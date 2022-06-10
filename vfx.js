@@ -13,6 +13,7 @@ class VFX {
 
     destroy() {
         Game.PIXIApp.stage.removeChild(this.sprite);
+        this.sprite.destroy();
         Game.VFX = Game.VFX.filter((v) => {
             return v !== this
         });

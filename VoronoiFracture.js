@@ -291,8 +291,7 @@ class Fragment extends GameObject {
     }
 
     destroy() {
-        super.destroy();
-        this.sprite.destroy(true); // Destroys texture too
+        super.destroy(true); // Destroys texture too
     }
 }
 

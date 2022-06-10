@@ -111,16 +111,19 @@ class CatmullRom {
         if(PathInterpolation.debugShowLine) {
             this.lineSegments.forEach((obj) => {
                 Game.PIXIApp.stage.removeChild(obj);
+                obj.destroy();
             })
         }
         if(PathInterpolation.debugShowPoints) {
             this.controlPoints.forEach((obj) => {
                 Game.PIXIApp.stage.removeChild(obj);
+                obj.destroy();
             })
         }
         if(PathInterpolation.debugShowTable) {
             this.tablePoints.forEach((obj) => {
                 Game.PIXIApp.stage.removeChild(obj);
+                obj.destroy();
             })
         }
         PathInterpolation.Splines = PathInterpolation.Splines.filter((v) => {
@@ -188,15 +191,26 @@ class CatmullRom {
                     let param_value = i + start;
                     this.arcLengthTable.add(param_value, accumulated_chord_length);
                     old_point = new_point;
-
-                    let arcGraph = new PIXI.Graphics();
-                    arcGraph.zIndex = 100001;
-                    arcGraph.beginFill(0xFFFF00);
-                    arcGraph.drawCircle(new_point.x, new_point.y, 2);
-                    arcGraph.endFill();
-                    this.tablePoints.push(arcGraph);
                 }
             }
+            this.createTableSamples();
+        }
+    }
+
+    createTableSamples() {
+        let sample = 0;
+        while(true) {
+            let point = this.lookUp(sample);
+            if(point === undefined) {
+                break;
+            }
+            let arcGraph = new PIXI.Graphics();
+            arcGraph.zIndex = 100001;
+            arcGraph.beginFill(0xFFFF00);
+            arcGraph.drawCircle(point.x, point.y, 2);
+            arcGraph.endFill();
+            this.tablePoints.push(arcGraph);
+            sample += 50;
         }
     }
 

@@ -7,10 +7,7 @@ class GameObject {
         //Debug.DrawDot(x, y, collisionRadius, 1000);
         Game.PIXIApp.stage.addChild(this.sprite);
         Game.Objects.push(this);
-
-        this.onDestroy = function () {
-
-        };
+        this.onDestroy = function () {};
     }
 
     fadeIn(duration, startScale, endScale) {
@@ -35,7 +32,7 @@ class GameObject {
     }
 
     update(delta) {
-        if (this.fadeTimer > 0) {
+        if (this.fadeTimer > 0 && this.sprite !== null) {
             this.fadeTimer -= delta;
             if (this.fadeTimer <= 0) {
                 if (this.fadingOut) {
@@ -52,9 +49,14 @@ class GameObject {
         }
     }
 
-    destroy() {
+    destroy(fullDestroy = false) {
         this.onDestroy();
         Game.PIXIApp.stage.removeChild(this.sprite);
+        if(fullDestroy) {
+            this.sprite.destroy(true);
+        } else {
+            this.sprite.destroy();
+        }
         Game.Objects = Game.Objects.filter((v) => {
             return v !== this
         });
@@ -78,6 +80,8 @@ class Player extends GameObject {
         this.currentHP = this.maxHP;
         this.pickupRange = 75;
         this.movementSpeed = Game.upgrades.speed.default;
+
+        this.plundertron = undefined;
     }
 
     update(delta) {
@@ -89,6 +93,13 @@ class Player extends GameObject {
 
         if (this.cannonCooldown > 0) {
             this.cannonCooldown -= delta;
+        }
+
+        if(this.plundertron !== undefined) {
+            this.plundertron.absolutePosition.x = this.sprite.x;
+            this.plundertron.absolutePosition.y = this.sprite.y;
+            this.plundertron.absoluteRotation = this.sprite.angle;
+            this.plundertron.update(delta);
         }
     }
 
@@ -121,13 +132,12 @@ class Player extends GameObject {
         return Math.max(0, healing - (this.maxHP - this.currentHP)); // Return excess healing
     }
 
-    fortify(amount) {
-        this.maxHP += amount;
-    }
-
     destroy() {
         super.destroy();
-        this.particle.clearTracking();
+        this.particle.destroyTracking();
+        if(this.plundertron !== undefined) {
+            this.plundertron.destroy();
+        }
     }
 }
 
@@ -147,6 +157,7 @@ class Cannonball extends GameObject {
         this.lifetime -= delta;
         if (this.lifetime < 0) {
             this.destroy();
+            return;
         }
         let objects = Game.GetCollidingObjects(this);
         let consumed = false;
@@ -189,6 +200,9 @@ class Plank extends GameObject {
 
     update(delta) {
         super.update(delta);
+        if(this.dead) {
+            return;
+        }
         ParticleDynamics.UpdateParticle(this.particle, delta);
         this.sprite.x = this.particle.pos.x;
         this.sprite.y = this.particle.pos.y;
@@ -204,7 +218,7 @@ class Plank extends GameObject {
 
     #destroyActual() {
         super.destroy();
-        this.particle.clearTracking();
+        this.particle.destroyTracking();
     }
 
     damage(amount) {
@@ -251,6 +265,9 @@ class Treasure extends GameObject {
 
     update(delta) {
         super.update(delta);
+        if(this.dead) {
+            return;
+        }
         ParticleDynamics.UpdateParticle(this.particle, delta);
         this.sprite.x = this.particle.pos.x;
         this.sprite.y = this.particle.pos.y;
@@ -266,7 +283,7 @@ class Treasure extends GameObject {
 
     #destroyActual() {
         super.destroy();
-        this.particle.clearTracking();
+        this.particle.destroyTracking();
     }
 
     damage(amount) {
@@ -296,6 +313,9 @@ class Barrel extends GameObject {
 
     update(delta) {
         super.update(delta);
+        if(this.dead) {
+            return;
+        }
         ParticleDynamics.UpdateParticle(this.particle, delta);
         this.sprite.x = this.particle.pos.x;
         this.sprite.y = this.particle.pos.y;
@@ -311,7 +331,7 @@ class Barrel extends GameObject {
 
     #destroyActual() {
         super.destroy();
-        this.particle.clearTracking();
+        this.particle.destroyTracking();
     }
 
     damage(amount) {
@@ -322,7 +342,6 @@ class Barrel extends GameObject {
     }
 
     cannonHit(point) {
-        this.#destroyActual();
         if (this.explosive) {
             new Explosion(this.sprite.x, this.sprite.y);
             for (let i = 0; i < 30; i++) {
@@ -332,6 +351,7 @@ class Barrel extends GameObject {
             }
             this.collisionRadius *= 3;
             let objects = Game.GetCollidingObjects(this);
+            this.#destroyActual();
             objects.forEach((object) => {
                 if (!("cannonHit" in object)) {
                     if (object.hasOwnProperty("particle")) {
@@ -358,6 +378,7 @@ class Barrel extends GameObject {
                 dir.scalarMultiply(10);
                 plank.particle.addImpulse(dir);
             }
+            this.#destroyActual();
         }
     }
 }
@@ -403,7 +424,7 @@ class ShipPart extends GameObject {
 
     destroy() {
         super.destroy();
-        this.particle.clearTracking();
+        this.particle.destroyTracking();
     }
 
     cannonHit(point) {
@@ -487,6 +508,7 @@ class Vortex extends GameObject {
 
         if (this.magnitude <= 0) {
             this.destroy();
+            return;
         }
 
         this.sprite.scale.set(this.magnitude * Game.config.vortexScaleMagnitudeRatio);
@@ -646,6 +668,11 @@ class BarrelBird extends Bird {
             }
         }
     }
+
+    destroy() {
+        super.destroy();
+        this.barrelSprite.destroy();
+    }
 }
 
 class Coconut extends GameObject {
@@ -704,7 +731,7 @@ class Coconut extends GameObject {
     destroy() {
         super.destroy();
         if (this.particle !== undefined) {
-            this.particle.clearTracking();
+            this.particle.destroyTracking();
         }
     }
 }

@@ -134,6 +134,9 @@ function RemoveGameHUD() {
     Game.PIXIApp.stage.removeChild(UI.HUD.healthBar);
     Game.PIXIApp.stage.removeChild(UI.HUD.cannonCooldown);
     Game.PIXIApp.stage.removeChild(UI.HUD.textArea);
+    UI.HUD.healthBar.destroy({children: true});
+    UI.HUD.cannonCooldown.destroy({children: true});
+    UI.HUD.healthBar.destroy({children: true});
 }
 
 function InitResultsScreen() {
@@ -238,7 +241,7 @@ function UpdateTextArea() {
     UI.HUD.textArea.plunder.text = "Plunder: " + Math.round(Game.plunder);
     if(Game.context === 3) {
         UI.HUD.textArea.finalScore.text = "Final Score: " + Math.round(Game.finalScore);
-        let rank = "";
+        let rank = Game.ranks.names[0];
         for(let i = 0; i < Game.ranks.thresholds.length; i++) {
             if(Game.finalScore > Game.ranks.thresholds[i]) {
                 rank = Game.ranks.names[i];

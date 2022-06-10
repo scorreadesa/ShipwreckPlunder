@@ -153,6 +153,7 @@ class CurrentLine {
     destroy() {
         this.segments.forEach((l) => {
             Game.PIXIApp.stage.removeChild(l);
+            l.destroy();
         })
         GameLogic.CurrentLines = GameLogic.CurrentLines.filter((v) => {
             return v !== this
