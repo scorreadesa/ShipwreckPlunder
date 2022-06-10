@@ -42,7 +42,7 @@ Game.upgrades.cannonCooldown.label = "Cannon Cooldown";
 Game.upgrades.cannonCooldown.default = 4;
 Game.upgrades.cannonCooldown.values = [3, 2, 1];
 Game.upgrades.cannonCooldown.costs = [150, 450, 900];
-Game.upgrades.cannonCooldown.display = ["7s", "5s", "3s", "1s"];
+Game.upgrades.cannonCooldown.display = ["4s", "3s", "2s", "1s"];
 Game.upgrades.cannonCooldown.level = -1;
 Game.upgrades.health = {};
 Game.upgrades.health.label = "Health";
@@ -63,8 +63,8 @@ Game.ranks = {};
 Game.ranks.thresholds = [0, 1000, 2000, 3000, 4000, 5000, 6000, 7000];
 Game.ranks.names = ["Landlubber", "Barnacle", "Ship Rat", "Swabber", "Lookout", "First Mate", "Captain", "Pirate King"];
 
-Game.score = 3450;
-Game.plunder = 2000;
+Game.score = 0;
+Game.plunder = 0;
 Game.finalScore = 0;
 
 Game.Inputs = {}
