@@ -63,8 +63,8 @@ Game.ranks = {};
 Game.ranks.thresholds = [0, 1000, 2000, 3000, 4000, 5000, 6000, 7000];
 Game.ranks.names = ["Landlubber", "Barnacle", "Ship Rat", "Swabber", "Lookout", "First Mate", "Captain", "Pirate King"];
 
-Game.score = 0;
-Game.plunder = 0;
+Game.score = 3450;
+Game.plunder = 2000;
 Game.finalScore = 0;
 
 Game.Inputs = {}

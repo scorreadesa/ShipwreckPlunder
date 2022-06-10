@@ -31,7 +31,6 @@ GameLogic.threat = 1;
 GameLogic.threatPerSecond = 1 / 60; // One threat per minute.
 GameLogic.threatSpawnAcceleration = 0.1;
 GameLogic.threatMaxAcceleration = 0.75;
-GameLogic.uberVortexSpawnThreshold = 5;
 
 function Update(delta) {
     CreateCurrentLines(delta);
