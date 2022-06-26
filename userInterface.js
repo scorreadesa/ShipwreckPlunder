@@ -266,7 +266,7 @@ function ApplyTPS() {
 function ApplyFPS() {
     let fps = parseInt(UI.Elements.fps.value, 10);
     Game.SetRenderFPS(Math.min(144, Math.max(0, fps)));
-    UI.Elements.tps.value = fps;
+    UI.Elements.fps.value = fps;
 }
 
 function ApplyDeltas() {
